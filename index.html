@@ -186,6 +186,27 @@
         .datetime-container input {
             flex: 1;
         }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #1976d2;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -241,6 +262,10 @@
                 
                 <button type="submit">Randevu Kaydet</button>
             </form>
+            <div id="loading-randevu" class="loading">
+                <div class="loading-spinner"></div>
+                <p>İşleminiz yapılıyor...</p>
+            </div>
         </div>
         
         <div class="tab-content" id="randevu-listesi">
@@ -259,6 +284,10 @@
             <div class="randevu-listesi" id="randevu-container">
                 <!-- Randevular dinamik olarak buraya eklenecek -->
                 <div class="empty-message">Henüz randevu bulunmamaktadır.</div>
+            </div>
+            <div id="loading-randevu-list" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Randevular yükleniyor...</p>
             </div>
         </div>
         
@@ -289,17 +318,91 @@
                 <!-- Hizmetler dinamik olarak buraya eklenecek -->
                 <div class="empty-message">Henüz hizmet bulunmamaktadır.</div>
             </div>
+            <div id="loading-hizmet" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Hizmetler yükleniyor...</p>
+            </div>
         </div>
     </div>
     
+    <!-- Firebase Modülleri -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
+    
     <script>
+        // Firebase yapılandırması
+        const firebaseConfig = {
+            apiKey: "AIzaSyCkDVD0MIZUy4tdLrWJDONYWlt0kXA2xuU",
+            authDomain: "royal-6ff68.firebaseapp.com",
+            databaseURL: "https://royal-6ff68-default-rtdb.firebaseio.com",
+            projectId: "royal-6ff68",
+            storageBucket: "royal-6ff68.appspot.com",
+            messagingSenderId: "1056928171234",
+            appId: "1:1056928171234:web:abcd1234efgh5678ijkl90",
+            measurementId: "G-XYZ123ABC"
+        };
+        
+        // Firebase başlatma
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
         // Temel değişkenler
-        let randevular = JSON.parse(localStorage.getItem('randevular')) || [];
-        let hizmetler = JSON.parse(localStorage.getItem('hizmetler')) || [];
+        let randevular = [];
+        let hizmetler = [];
         let duzenlemeModu = false;
         let duzenlemeMevcutId = null;
         let hizmetDuzenlemeModu = false;
         let hizmetDuzenlemeMevcutId = null;
+        
+        // Firebase'den verileri getiren fonksiyonlar
+        function randevulariGetir() {
+            const loadingElement = document.getElementById('loading-randevu-list');
+            loadingElement.style.display = 'block';
+            
+            database.ref('randevular').on('value', (snapshot) => {
+                loadingElement.style.display = 'none';
+                randevular = [];
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const randevu = childSnapshot.val();
+                        randevu.id = childSnapshot.key;
+                        randevular.push(randevu);
+                    });
+                }
+                
+                randevulariGoster();
+            }, (error) => {
+                loadingElement.style.display = 'none';
+                console.error("Randevular getirilemedi: ", error);
+                alert("Randevular yüklenirken bir hata oluştu!");
+            });
+        }
+        
+        function hizmetleriGetir() {
+            const loadingElement = document.getElementById('loading-hizmet');
+            loadingElement.style.display = 'block';
+            
+            database.ref('hizmetler').on('value', (snapshot) => {
+                loadingElement.style.display = 'none';
+                hizmetler = [];
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const hizmet = childSnapshot.val();
+                        hizmet.id = childSnapshot.key;
+                        hizmetler.push(hizmet);
+                    });
+                }
+                
+                hizmetleriGoster();
+                hizmetSelectGuncelle();
+            }, (error) => {
+                loadingElement.style.display = 'none';
+                console.error("Hizmetler getirilemedi: ", error);
+                alert("Hizmetler yüklenirken bir hata oluştu!");
+            });
+        }
         
         // Tab geçişleri
         document.querySelectorAll('.tab').forEach(tab => {
@@ -317,7 +420,12 @@
                 
                 // Randevu listesine geçildiğinde listeyi güncelle
                 if (tabId === 'randevu-listesi') {
-                    randevulariGoster();
+                    randevulariGetir();
+                }
+                
+                // Hizmet yönetimine geçildiğinde listeyi güncelle
+                if (tabId === 'hizmet-yonetimi') {
+                    hizmetleriGetir();
                 }
             });
         });
@@ -342,30 +450,41 @@
                 return;
             }
             
+            const loadingElement = document.getElementById('loading-randevu');
+            loadingElement.style.display = 'block';
+            
             if (duzenlemeModu && duzenlemeMevcutId !== null) {
                 // Düzenleme modu
-                const index = randevular.findIndex(r => r.id === duzenlemeMevcutId);
-                if (index !== -1) {
-                    randevular[index] = {
-                        ...randevular[index],
-                        isim,
-                        telefon,
-                        adres,
-                        hizmetId,
-                        hizmetAdi: secilenHizmet.adi,
-                        hizmetFiyati: secilenHizmet.fiyat,
-                        tarih,
-                        saat,
-                        notlar,
-                        guncellemeTarihi: new Date().toISOString()
-                    };
-                }
-                duzenlemeModu = false;
-                duzenlemeMevcutId = null;
+                const randevuVerisi = {
+                    isim,
+                    telefon,
+                    adres,
+                    hizmetId,
+                    hizmetAdi: secilenHizmet.adi,
+                    hizmetFiyati: secilenHizmet.fiyat,
+                    tarih,
+                    saat,
+                    notlar,
+                    guncellemeTarihi: new Date().toISOString()
+                };
+                
+                database.ref('randevular/' + duzenlemeMevcutId).update(randevuVerisi)
+                    .then(() => {
+                        loadingElement.style.display = 'none';
+                        alert('Randevu güncellendi!');
+                        document.getElementById('randevu-form').reset();
+                        duzenlemeModu = false;
+                        duzenlemeMevcutId = null;
+                        document.querySelector('button[type="submit"]').textContent = 'Randevu Kaydet';
+                    })
+                    .catch((error) => {
+                        loadingElement.style.display = 'none';
+                        console.error("Randevu güncellenemedi: ", error);
+                        alert("Randevu güncellenirken bir hata oluştu!");
+                    });
             } else {
                 // Yeni randevu
                 const yeniRandevu = {
-                    id: Date.now().toString(),
                     isim,
                     telefon,
                     adres,
@@ -379,22 +498,22 @@
                     guncellemeTarihi: new Date().toISOString()
                 };
                 
-                randevular.push(yeniRandevu);
+                database.ref('randevular').push(yeniRandevu)
+                    .then(() => {
+                        loadingElement.style.display = 'none';
+                        alert('Randevu başarıyla eklendi!');
+                        document.getElementById('randevu-form').reset();
+                        
+                        // Bugünün tarihini varsayılan olarak ayarla
+                        const bugun = new Date().toISOString().split('T')[0];
+                        document.getElementById('tarih').value = bugun;
+                    })
+                    .catch((error) => {
+                        loadingElement.style.display = 'none';
+                        console.error("Randevu eklenemedi: ", error);
+                        alert("Randevu eklenirken bir hata oluştu!");
+                    });
             }
-            
-            // Randevuları kaydet ve formu sıfırla
-            localStorage.setItem('randevular', JSON.stringify(randevular));
-            document.getElementById('randevu-form').reset();
-            
-            // Kullanıcıya bildirim ver
-            alert(duzenlemeModu ? 'Randevu güncellendi!' : 'Randevu başarıyla eklendi!');
-            
-            // Düzenleme modundan çık
-            duzenlemeModu = false;
-            document.querySelector('button[type="submit"]').textContent = 'Randevu Kaydet';
-            
-            // Randevu listesini güncelle
-            randevulariGoster();
         });
         
         // Randevuları listele
@@ -490,9 +609,14 @@
         // Randevu silme fonksiyonu
         function randevuyuSil(id) {
             if (confirm('Bu randevuyu silmek istediğinizden emin misiniz?')) {
-                randevular = randevular.filter(r => r.id !== id);
-                localStorage.setItem('randevular', JSON.stringify(randevular));
-                randevulariGoster();
+                database.ref('randevular/' + id).remove()
+                    .then(() => {
+                        alert('Randevu silindi!');
+                    })
+                    .catch((error) => {
+                        console.error("Randevu silinemedi: ", error);
+                        alert("Randevu silinirken bir hata oluştu!");
+                    });
             }
         }
         
@@ -534,24 +658,35 @@
             const hizmetFiyati = parseFloat(document.getElementById('hizmet-fiyati').value);
             const hizmetSuresi = parseInt(document.getElementById('hizmet-suresi').value);
             
+            const loadingElement = document.getElementById('loading-hizmet');
+            loadingElement.style.display = 'block';
+            
             if (hizmetDuzenlemeModu && hizmetDuzenlemeMevcutId !== null) {
                 // Düzenleme modu
-                const index = hizmetler.findIndex(h => h.id === hizmetDuzenlemeMevcutId);
-                if (index !== -1) {
-                    hizmetler[index] = {
-                        ...hizmetler[index],
-                        adi: hizmetAdi,
-                        fiyat: hizmetFiyati,
-                        sure: hizmetSuresi,
-                        guncellemeTarihi: new Date().toISOString()
-                    };
-                }
-                hizmetDuzenlemeModu = false;
-                hizmetDuzenlemeMevcutId = null;
+                const hizmetVerisi = {
+                    adi: hizmetAdi,
+                    fiyat: hizmetFiyati,
+                    sure: hizmetSuresi,
+                    guncellemeTarihi: new Date().toISOString()
+                };
+                
+                database.ref('hizmetler/' + hizmetDuzenlemeMevcutId).update(hizmetVerisi)
+                    .then(() => {
+                        loadingElement.style.display = 'none';
+                        alert('Hizmet güncellendi!');
+                        document.getElementById('hizmet-form').reset();
+                        hizmetDuzenlemeModu = false;
+                        hizmetDuzenlemeMevcutId = null;
+                        document.querySelector('#hizmet-form button[type="submit"]').textContent = 'Hizmet Ekle';
+                    })
+                    .catch((error) => {
+                        loadingElement.style.display = 'none';
+                        console.error("Hizmet güncellenemedi: ", error);
+                        alert("Hizmet güncellenirken bir hata oluştu!");
+                    });
             } else {
                 // Yeni hizmet
                 const yeniHizmet = {
-                    id: Date.now().toString(),
                     adi: hizmetAdi,
                     fiyat: hizmetFiyati,
                     sure: hizmetSuresi,
@@ -559,23 +694,18 @@
                     guncellemeTarihi: new Date().toISOString()
                 };
                 
-                hizmetler.push(yeniHizmet);
+                database.ref('hizmetler').push(yeniHizmet)
+                    .then(() => {
+                        loadingElement.style.display = 'none';
+                        alert('Hizmet başarıyla eklendi!');
+                        document.getElementById('hizmet-form').reset();
+                    })
+                    .catch((error) => {
+                        loadingElement.style.display = 'none';
+                        console.error("Hizmet eklenemedi: ", error);
+                        alert("Hizmet eklenirken bir hata oluştu!");
+                    });
             }
-            
-            // Hizmetleri kaydet ve formu sıfırla
-            localStorage.setItem('hizmetler', JSON.stringify(hizmetler));
-            document.getElementById('hizmet-form').reset();
-            
-            // Kullanıcıya bildirim ver
-            alert(hizmetDuzenlemeModu ? 'Hizmet güncellendi!' : 'Hizmet başarıyla eklendi!');
-            
-            // Düzenleme modundan çık
-            hizmetDuzenlemeModu = false;
-            document.querySelector('#hizmet-form button[type="submit"]').textContent = 'Hizmet Ekle';
-            
-            // Hizmet listesini güncelle
-            hizmetleriGoster();
-            hizmetSelectGuncelle();
         });
         
         // Hizmetleri listele
@@ -598,106 +728,4 @@
                 hizmetItem.innerHTML = `
                     <h3>${hizmet.adi}</h3>
                     <p><strong>Fiyat:</strong> ${hizmet.fiyat} TL</p>
-                    <p><strong>Süre:</strong> ${hizmet.sure} dakika</p>
-                    <div class="buttons">
-                        <button class="edit-hizmet-btn" data-id="${hizmet.id}">Düzenle</button>
-                        <button class="delete-hizmet-btn" data-id="${hizmet.id}">Sil</button>
-                    </div>
-                `;
-                
-                container.appendChild(hizmetItem);
-            });
-            
-            // Düzenleme butonlarına olay dinleyicisi ekle
-            document.querySelectorAll('.edit-hizmet-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    hizmetiDuzenle(id);
-                });
-            });
-            
-            // Silme butonlarına olay dinleyicisi ekle
-            document.querySelectorAll('.delete-hizmet-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    hizmetiSil(id);
-                });
-            });
-        }
-        
-        // Hizmet düzenleme fonksiyonu
-        function hizmetiDuzenle(id) {
-            const hizmet = hizmetler.find(h => h.id === id);
-            if (!hizmet) return;
-            
-            // Form alanlarını doldur
-            document.getElementById('hizmet-adi').value = hizmet.adi;
-            document.getElementById('hizmet-fiyati').value = hizmet.fiyat;
-            document.getElementById('hizmet-suresi').value = hizmet.sure;
-            
-            // Düzenleme modunu etkinleştir
-            hizmetDuzenlemeModu = true;
-            hizmetDuzenlemeMevcutId = id;
-            document.querySelector('#hizmet-form button[type="submit"]').textContent = 'Hizmeti Güncelle';
-        }
-        
-        // Hizmet silme fonksiyonu
-        function hizmetiSil(id) {
-            if (confirm('Bu hizmeti silmek istediğinizden emin misiniz?')) {
-                hizmetler = hizmetler.filter(h => h.id !== id);
-                localStorage.setItem('hizmetler', JSON.stringify(hizmetler));
-                hizmetleriGoster();
-                hizmetSelectGuncelle();
-            }
-        }
-        
-        // Hizmet seçim kutusunu güncelle
-        function hizmetSelectGuncelle() {
-            const hizmetSelectRandevu = document.getElementById('hizmet');
-            const hizmetSelectFilter = document.getElementById('filter-hizmet');
-            
-            // Mevcut seçenekleri sakla
-            const selectedValueRandevu = hizmetSelectRandevu.value;
-            const selectedValueFilter = hizmetSelectFilter.value;
-            
-            // Seçim kutularını temizle
-            hizmetSelectRandevu.innerHTML = '<option value="">Lütfen bir hizmet seçin</option>';
-            hizmetSelectFilter.innerHTML = '<option value="">Tüm Hizmetler</option>';
-            
-            // Hizmetleri ekle
-            hizmetler.forEach(hizmet => {
-                const optionRandevu = document.createElement('option');
-                optionRandevu.value = hizmet.id;
-                optionRandevu.textContent = `${hizmet.adi} (${hizmet.fiyat} TL)`;
-                hizmetSelectRandevu.appendChild(optionRandevu);
-                
-                const optionFilter = document.createElement('option');
-                optionFilter.value = hizmet.id;
-                optionFilter.textContent = hizmet.adi;
-                hizmetSelectFilter.appendChild(optionFilter);
-            });
-            
-            // Önceki seçimleri geri yükle (eğer hala varsa)
-            if (selectedValueRandevu && hizmetler.some(h => h.id === selectedValueRandevu)) {
-                hizmetSelectRandevu.value = selectedValueRandevu;
-            }
-            
-            if (selectedValueFilter && hizmetler.some(h => h.id === selectedValueFilter)) {
-                hizmetSelectFilter.value = selectedValueFilter;
-            }
-        }
-        
-        // Uygulamayı başlat
-        document.addEventListener('DOMContentLoaded', function() {
-            randevulariGoster();
-            hizmetleriGoster();
-            hizmetSelectGuncelle();
-            
-            // Bugünün tarihini varsayılan olarak ayarla
-            const bugun = new Date().toISOString().split('T')[0];
-            document.getElementById('tarih').value = bugun;
-            document.getElementById('filter-tarih').value = '';
-        });
-    </script>
-</body>
-</html>
+                    <p><strong>Süre
