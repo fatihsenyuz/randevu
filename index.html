@@ -3,729 +3,701 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Koltuk Yıkama Randevu Sistemi</title>
+    <title>Randevu Sistemi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/tr.js"></script>
     <style>
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2ecc71;
+            --gray-light: #f5f7fa;
+            --gray: #e0e0e0;
+            --text: #333;
+            --text-light: #666;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
-            background-color: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background-color: #f9f9f9;
+            color: var(--text);
+            line-height: 1.6;
         }
-        
+
         .container {
-            max-width: 100%;
-            padding: 15px;
-            flex: 1;
-        }
-        
-        .header {
-            background-color: #1976d2;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .tab-container {
-            display: flex;
-            background-color: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-        
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-        
-        .tab.active {
-            background-color: #1976d2;
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-            background-color: white;
-            border-radius: 8px;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        
-        .tab-content.active {
-            display: block;
+
+        header {
+            background-color: white;
+            box-shadow: var(--shadow);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
-        .form-group {
-            margin-bottom: 15px;
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-item {
+            color: var(--text);
+            text-decoration: none;
             font-weight: 500;
-            color: #333;
+            transition: color 0.3s;
         }
-        
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
+
+        .nav-item:hover {
+            color: var(--primary);
         }
-        
-        textarea {
-            resize: vertical;
-            min-height: 60px;
+
+        .hero {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin: 40px 0;
+            text-align: center;
         }
-        
-        button {
-            background-color: #1976d2;
+
+        .hero h1 {
+            font-size: 36px;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--text-light);
+            max-width: 700px;
+            margin: 0 auto 32px;
+        }
+
+        .cta-button {
+            background-color: var(--primary);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 12px 24px;
+            border-radius: var(--radius);
             font-size: 16px;
             font-weight: 600;
-            width: 100%;
-            margin-top: 10px;
+            cursor: pointer;
             transition: background-color 0.3s;
         }
-        
-        button:hover {
-            background-color: #1565c0;
+
+        .cta-button:hover {
+            background-color: var(--primary-dark);
         }
-        
-        .randevu-listesi {
-            max-height: 600px;
-            overflow-y: auto;
+
+        .services {
+            margin: 40px 0;
         }
-        
-        .randevu-item {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #1976d2;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .randevu-item h3 {
-            margin-bottom: 10px;
-            color: #1976d2;
-        }
-        
-        .randevu-item p {
-            margin-bottom: 5px;
-            color: #555;
-        }
-        
-        .randevu-item .buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .randevu-item .edit-btn {
-            background-color: #ff9800;
-        }
-        
-        .randevu-item .delete-btn {
-            background-color: #f44336;
-        }
-        
-        .filter-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .filter-container input, .filter-container select {
-            flex: 1;
-        }
-        
-        .empty-message {
+
+        .section-title {
+            font-size: 28px;
+            margin-bottom: 24px;
             text-align: center;
-            color: #777;
-            padding: 30px 0;
         }
-        
-        @media (max-width: 768px) {
-            .tab-container {
-                flex-direction: column;
-            }
-            
-            .filter-container {
-                flex-direction: column;
-            }
-            
-            .randevu-item .buttons {
-                flex-direction: column;
-            }
+
+        .service-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
         }
-        
-        .datetime-container {
-            display: flex;
-            gap: 10px;
+
+        .service-card {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            transition: transform 0.3s;
+            cursor: pointer;
         }
-        
-        .datetime-container input {
-            flex: 1;
+
+        .service-card:hover {
+            transform: translateY(-5px);
         }
-        
-        .loading {
-            display: none;
+
+        .service-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .service-card p {
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .service-card .price {
+            font-weight: bold;
+            color: var(--secondary);
+            margin-bottom: 16px;
+        }
+
+        .service-card .duration {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .booking-section {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin: 40px 0;
+        }
+
+        .booking-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 32px;
+        }
+
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .calendar th {
+            padding: 12px;
             text-align: center;
-            padding: 20px;
+            background-color: var(--gray-light);
         }
-        
-        .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
+
+        .calendar td {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
             border-radius: 50%;
-            border-left-color: #1976d2;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            transition: background-color 0.3s;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .calendar td:hover:not(.disabled) {
+            background-color: var(--gray-light);
+        }
+
+        .calendar .today {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .calendar .selected {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .calendar .disabled {
+            color: var(--gray);
+            cursor: not-allowed;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px;
+        }
+
+        .time-slot {
+            padding: 12px 8px;
+            text-align: center;
+            background-color: var(--gray-light);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .time-slot:hover:not(.disabled) {
+            background-color: var(--gray);
+        }
+
+        .time-slot.selected {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .time-slot.disabled {
+            color: var(--gray);
+            background-color: #f8f8f8;
+            cursor: not-allowed;
+        }
+
+        .booking-form {
+            margin-top: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray);
+            border-radius: var(--radius);
+            font-size: 16px;
+        }
+
+        .month-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .month-selector button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--primary);
+        }
+
+        .month-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        footer {
+            background-color: white;
+            padding: 40px 0;
+            margin-top: 40px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        .footer-column p, .footer-column a {
+            color: var(--text-light);
+            margin-bottom: 8px;
+            display: block;
+            text-decoration: none;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary);
+        }
+
+        .copyright {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .booking-container {
+                grid-template-columns: 1fr;
+            }
+
+            .service-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 24px;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .booking-section {
+                padding: 24px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Koltuk Yıkama Randevu Sistemi</h1>
-    </div>
-    
-    <div class="container">
-        <div class="tab-container">
-            <div class="tab active" data-tab="randevu-ekle">Randevu Ekle</div>
-            <div class="tab" data-tab="randevu-listesi">Randevuları Listele</div>
-            <div class="tab" data-tab="hizmet-yonetimi">Hizmet Yönetimi</div>
+    <header>
+        <div class="container header-content">
+            <div class="logo">RandevuSistem</div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item">Ana Sayfa</a>
+                <a href="#services" class="nav-item">Hizmetler</a>
+                <a href="#booking" class="nav-item">Randevu Al</a>
+                <a href="#" class="nav-item">İletişim</a>
+            </nav>
         </div>
-        
-        <div class="tab-content active" id="randevu-ekle">
-            <h2>Yeni Randevu</h2>
-            <form id="randevu-form">
-                <div class="form-group">
-                    <label for="isim">İsim Soyisim</label>
-                    <input type="text" id="isim" name="isim" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="telefon">Telefon Numarası</label>
-                    <input type="tel" id="telefon" name="telefon" pattern="[0-9]+" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="adres">Adres</label>
-                    <textarea id="adres" name="adres" required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="hizmet">Hizmet Seçin</label>
-                    <select id="hizmet" name="hizmet" required>
-                        <option value="">Lütfen bir hizmet seçin</option>
-                        <!-- Hizmetler dinamik olarak buraya eklenecek -->
-                    </select>
-                </div>
+    </header>
 
-                <div class="form-group">
-                    <label for="tarih">Randevu Tarihi</label>
-                    <div class="datetime-container">
-                        <input type="date" id="tarih" name="tarih" required>
-                        <input type="time" id="saat" name="saat" required>
+    <div class="container">
+        <section class="hero">
+            <h1>Randevunuzu Kolayca Planlayın</h1>
+            <p>Birkaç tıklama ile istediğiniz hizmeti seçin, size uygun bir tarih ve saat belirleyin ve işleminizi tamamlayın.</p>
+            <button class="cta-button" onclick="scrollToBooking()">Hemen Randevu Al</button>
+        </section>
+
+        <section id="services" class="services">
+            <h2 class="section-title">Hizmetlerimiz</h2>
+            <div class="service-cards">
+                <div class="service-card" onclick="selectService('Saç Kesimi')">
+                    <h3>Saç Kesimi</h3>
+                    <p>Profesyonel saç kesimi hizmetimiz ile yeni bir görünüme kavuşun.</p>
+                    <div class="price">₺150</div>
+                    <div class="duration">Süre: 30 dakika</div>
+                </div>
+                <div class="service-card" onclick="selectService('Saç Boyama')">
+                    <h3>Saç Boyama</h3>
+                    <p>Uzman kadromuz ile istediğiniz renge kavuşun.</p>
+                    <div class="price">₺350</div>
+                    <div class="duration">Süre: 90 dakika</div>
+                </div>
+                <div class="service-card" onclick="selectService('Saç Bakımı')">
+                    <h3>Saç Bakımı</h3>
+                    <p>Saçlarınız için özel bakım ve onarım paketleri.</p>
+                    <div class="price">₺250</div>
+                    <div class="duration">Süre: 60 dakika</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="booking" class="booking-section">
+            <h2 class="section-title">Randevu Planla</h2>
+            <div class="booking-container">
+                <div class="calendar-container">
+                    <div class="month-selector">
+                        <button id="prevMonth">&lt;</button>
+                        <span class="month-name" id="currentMonth">Mayıs 2025</span>
+                        <button id="nextMonth">&gt;</button>
+                    </div>
+                    <table class="calendar" id="calendar">
+                        <thead>
+                            <tr>
+                                <th>Pt</th>
+                                <th>Sa</th>
+                                <th>Ça</th>
+                                <th>Pe</th>
+                                <th>Cu</th>
+                                <th>Ct</th>
+                                <th>Pz</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendarBody"></tbody>
+                    </table>
+                </div>
+                <div class="booking-details">
+                    <h3>Seçilen Hizmet: <span id="selectedService">Henüz seçilmedi</span></h3>
+                    <h3 class="mt-4">Uygun Saatler</h3>
+                    <div class="time-slots" id="timeSlots">
+                        <div class="time-slot" onclick="selectTime('09:00')">09:00</div>
+                        <div class="time-slot" onclick="selectTime('10:00')">10:00</div>
+                        <div class="time-slot" onclick="selectTime('11:00')">11:00</div>
+                        <div class="time-slot" onclick="selectTime('12:00')">12:00</div>
+                        <div class="time-slot" onclick="selectTime('13:00')">13:00</div>
+                        <div class="time-slot disabled">14:00</div>
+                        <div class="time-slot" onclick="selectTime('15:00')">15:00</div>
+                        <div class="time-slot" onclick="selectTime('16:00')">16:00</div>
+                        <div class="time-slot" onclick="selectTime('17:00')">17:00</div>
+                        <div class="time-slot" onclick="selectTime('18:00')">18:00</div>
+                    </div>
+
+                    <div class="booking-form">
+                        <h3>Kişisel Bilgiler</h3>
+                        <div class="form-group">
+                            <label for="name">Ad Soyad</label>
+                            <input type="text" id="name" class="form-control" placeholder="Ad Soyad">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-posta</label>
+                            <input type="email" id="email" class="form-control" placeholder="E-posta adresiniz">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Telefon</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="Telefon numaranız">
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Notlar</label>
+                            <textarea id="notes" class="form-control" rows="3" placeholder="Eklemek istediğiniz notlar"></textarea>
+                        </div>
+                        <button class="cta-button" onclick="bookAppointment()">Randevuyu Onayla</button>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="notlar">Notlar (İsteğe Bağlı)</label>
-                    <textarea id="notlar" name="notlar"></textarea>
-                </div>
-                
-                <button type="submit">Randevu Kaydet</button>
-            </form>
-            <div id="loading-randevu" class="loading">
-                <div class="loading-spinner"></div>
-                <p>İşleminiz yapılıyor...</p>
             </div>
-        </div>
-        
-        <div class="tab-content" id="randevu-listesi">
-            <h2>Randevular</h2>
-            
-            <div class="filter-container">
-                <input type="date" id="filter-tarih" placeholder="Tarihe göre filtrele">
-                <input type="text" id="filter-isim" placeholder="İsme göre ara">
-                <select id="filter-hizmet">
-                    <option value="">Tüm Hizmetler</option>
-                    <!-- Hizmetler dinamik olarak buraya eklenecek -->
-                </select>
-                <button id="filter-button">Filtrele</button>
-            </div>
-            
-            <div class="randevu-listesi" id="randevu-container">
-                <!-- Randevular dinamik olarak buraya eklenecek -->
-                <div class="empty-message">Henüz randevu bulunmamaktadır.</div>
-            </div>
-            <div id="loading-randevu-list" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Randevular yükleniyor...</p>
-            </div>
-        </div>
-        
-        <div class="tab-content" id="hizmet-yonetimi">
-            <h2>Hizmet Yönetimi</h2>
-            
-            <form id="hizmet-form">
-                <div class="form-group">
-                    <label for="hizmet-adi">Hizmet Adı</label>
-                    <input type="text" id="hizmet-adi" name="hizmet-adi" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="hizmet-fiyati">Fiyat (TL)</label>
-                    <input type="number" id="hizmet-fiyati" name="hizmet-fiyati" min="0" step="0.01" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="hizmet-suresi">Yaklaşık Süre (dakika)</label>
-                    <input type="number" id="hizmet-suresi" name="hizmet-suresi" min="1" required>
-                </div>
-                
-                <button type="submit">Hizmet Ekle</button>
-            </form>
-            
-            <h3 style="margin-top: 20px;">Mevcut Hizmetler</h3>
-            <div class="hizmet-listesi" id="hizmet-container">
-                <!-- Hizmetler dinamik olarak buraya eklenecek -->
-                <div class="empty-message">Henüz hizmet bulunmamaktadır.</div>
-            </div>
-            <div id="loading-hizmet" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Hizmetler yükleniyor...</p>
-            </div>
-        </div>
+        </section>
     </div>
-    
-    <!-- Firebase Modülleri -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
-    
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Hakkımızda</h3>
+                    <p>RandevuSistem ile işletmeniz için kolay ve etkin randevu yönetimi sağlıyoruz.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Bağlantılar</h3>
+                    <a href="#">Ana Sayfa</a>
+                    <a href="#services">Hizmetler</a>
+                    <a href="#booking">Randevu Al</a>
+                    <a href="#">İletişim</a>
+                </div>
+                <div class="footer-column">
+                    <h3>İletişim</h3>
+                    <p>info@randevusistem.com</p>
+                    <p>+90 555 123 45 67</p>
+                    <p>İstanbul, Türkiye</p>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 RandevuSistem. Tüm hakları saklıdır.
+            </div>
+        </div>
+    </footer>
+
     <script>
-        // Firebase yapılandırması
-        const firebaseConfig = {
-            apiKey: "AIzaSyCkDVD0MIZUy4tdLrWJDONYWlt0kXA2xuU",
-            authDomain: "royal-6ff68.firebaseapp.com",
-            databaseURL: "https://royal-6ff68-default-rtdb.firebaseio.com",
-            projectId: "royal-6ff68",
-            storageBucket: "royal-6ff68.appspot.com",
-            messagingSenderId: "1056928171234",
-            appId: "1:1056928171234:web:abcd1234efgh5678ijkl90",
-            measurementId: "G-XYZ123ABC"
+        // Değişkenler
+        let selectedDate = null;
+        let selectedTime = null;
+        let selectedServiceName = null;
+        let currentMonth = new Date();
+
+        // Sayfa yüklendiğinde çalışacak fonksiyon
+        window.onload = function() {
+            generateCalendar();
+            document.getElementById('prevMonth').addEventListener('click', function() {
+                currentMonth.setMonth(currentMonth.getMonth() - 1);
+                generateCalendar();
+            });
+            document.getElementById('nextMonth').addEventListener('click', function() {
+                currentMonth.setMonth(currentMonth.getMonth() + 1);
+                generateCalendar();
+            });
         };
-        
-        // Firebase başlatma
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        // Temel değişkenler
-        let randevular = [];
-        let hizmetler = [];
-        let duzenlemeModu = false;
-        let duzenlemeMevcutId = null;
-        let hizmetDuzenlemeModu = false;
-        let hizmetDuzenlemeMevcutId = null;
-        
-        // Firebase'den verileri getiren fonksiyonlar
-        function randevulariGetir() {
-            const loadingElement = document.getElementById('loading-randevu-list');
-            loadingElement.style.display = 'block';
+
+        // Takvim oluşturma fonksiyonu
+        function generateCalendar() {
+            moment.locale('tr');
+            const calendarBody = document.getElementById('calendarBody');
+            calendarBody.innerHTML = '';
             
-            database.ref('randevular').on('value', (snapshot) => {
-                loadingElement.style.display = 'none';
-                randevular = [];
-                
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const randevu = childSnapshot.val();
-                        randevu.id = childSnapshot.key;
-                        randevular.push(randevu);
-                    });
-                }
-                
-                randevulariGoster();
-            }, (error) => {
-                loadingElement.style.display = 'none';
-                console.error("Randevular getirilemedi: ", error);
-                alert("Randevular yüklenirken bir hata oluştu!");
-            });
-        }
-        
-        function hizmetleriGetir() {
-            const loadingElement = document.getElementById('loading-hizmet');
-            loadingElement.style.display = 'block';
+            const monthYear = moment(currentMonth).format('MMMM YYYY');
+            document.getElementById('currentMonth').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
             
-            database.ref('hizmetler').on('value', (snapshot) => {
-                loadingElement.style.display = 'none';
-                hizmetler = [];
-                
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const hizmet = childSnapshot.val();
-                        hizmet.id = childSnapshot.key;
-                        hizmetler.push(hizmet);
-                    });
-                }
-                
-                hizmetleriGoster();
-                hizmetSelectGuncelle();
-            }, (error) => {
-                loadingElement.style.display = 'none';
-                console.error("Hizmetler getirilemedi: ", error);
-                alert("Hizmetler yüklenirken bir hata oluştu!");
-            });
-        }
-        
-        // Tab geçişleri
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                // Aktif tab'ı değiştir
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                
-                // İlgili içeriği göster
-                const tabId = this.getAttribute('data-tab');
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(tabId).classList.add('active');
-                
-                // Randevu listesine geçildiğinde listeyi güncelle
-                if (tabId === 'randevu-listesi') {
-                    randevulariGetir();
-                }
-                
-                // Hizmet yönetimine geçildiğinde listeyi güncelle
-                if (tabId === 'hizmet-yonetimi') {
-                    hizmetleriGetir();
-                }
-            });
-        });
-        
-        // Form gönderimi
-        document.getElementById('randevu-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+            const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+            const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
             
-            const isim = document.getElementById('isim').value;
-            const telefon = document.getElementById('telefon').value;
-            const adres = document.getElementById('adres').value;
-            const hizmetId = document.getElementById('hizmet').value;
-            const tarih = document.getElementById('tarih').value;
-            const saat = document.getElementById('saat').value;
-            const notlar = document.getElementById('notlar').value;
+            let startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Pazartesi 0, Pazar 6
+            let date = 1;
             
-            // Seçilen hizmetin bilgilerini al
-            const secilenHizmet = hizmetler.find(h => h.id === hizmetId);
-            
-            if (!secilenHizmet) {
-                alert('Lütfen bir hizmet seçin!');
-                return;
-            }
-            
-            const loadingElement = document.getElementById('loading-randevu');
-            loadingElement.style.display = 'block';
-            
-            if (duzenlemeModu && duzenlemeMevcutId !== null) {
-                // Düzenleme modu
-                const randevuVerisi = {
-                    isim,
-                    telefon,
-                    adres,
-                    hizmetId,
-                    hizmetAdi: secilenHizmet.adi,
-                    hizmetFiyati: secilenHizmet.fiyat,
-                    tarih,
-                    saat,
-                    notlar,
-                    guncellemeTarihi: new Date().toISOString()
-                };
+            // Takvim günlerini oluştur
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
                 
-                database.ref('randevular/' + duzenlemeMevcutId).update(randevuVerisi)
-                    .then(() => {
-                        loadingElement.style.display = 'none';
-                        alert('Randevu güncellendi!');
-                        document.getElementById('randevu-form').reset();
-                        duzenlemeModu = false;
-                        duzenlemeMevcutId = null;
-                        document.querySelector('button[type="submit"]').textContent = 'Randevu Kaydet';
-                    })
-                    .catch((error) => {
-                        loadingElement.style.display = 'none';
-                        console.error("Randevu güncellenemedi: ", error);
-                        alert("Randevu güncellenirken bir hata oluştu!");
-                    });
-            } else {
-                // Yeni randevu
-                const yeniRandevu = {
-                    isim,
-                    telefon,
-                    adres,
-                    hizmetId,
-                    hizmetAdi: secilenHizmet.adi,
-                    hizmetFiyati: secilenHizmet.fiyat,
-                    tarih,
-                    saat,
-                    notlar,
-                    olusturmaTarihi: new Date().toISOString(),
-                    guncellemeTarihi: new Date().toISOString()
-                };
-                
-                database.ref('randevular').push(yeniRandevu)
-                    .then(() => {
-                        loadingElement.style.display = 'none';
-                        alert('Randevu başarıyla eklendi!');
-                        document.getElementById('randevu-form').reset();
+                for (let j = 0; j < 7; j++) {
+                    const cell = document.createElement('td');
+                    
+                    if (i === 0 && j < startDay) {
+                        // Önceki ayın son günleri (boş hücreler)
+                    } else if (date > lastDay.getDate()) {
+                        // Sonraki ayın ilk günleri (boş hücreler)
+                    } else {
+                        cell.textContent = date;
                         
-                        // Bugünün tarihini varsayılan olarak ayarla
-                        const bugun = new Date().toISOString().split('T')[0];
-                        document.getElementById('tarih').value = bugun;
-                    })
-                    .catch((error) => {
-                        loadingElement.style.display = 'none';
-                        console.error("Randevu eklenemedi: ", error);
-                        alert("Randevu eklenirken bir hata oluştu!");
-                    });
+                        const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), date);
+                        const today = new Date();
+                        
+                        // Bugünden önceki tarihleri devre dışı bırak
+                        if (currentDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                            cell.classList.add('disabled');
+                        } else {
+                            cell.addEventListener('click', function() {
+                                selectDate(this, currentDate);
+                            });
+                            
+                            // Bugünü vurgula
+                            if (currentDate.getDate() === today.getDate() && 
+                                currentDate.getMonth() === today.getMonth() && 
+                                currentDate.getFullYear() === today.getFullYear()) {
+                                cell.classList.add('today');
+                            }
+                        }
+                        
+                        date++;
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                
+                calendarBody.appendChild(row);
+                
+                // Ay tamamlandıysa döngüden çık
+                if (date > lastDay.getDate()) break;
             }
-        });
-        
-        // Randevuları listele
-        function randevulariGoster(filtrelenmiRandevular = null) {
-            const container = document.getElementById('randevu-container');
-            const gosterilecekRandevular = filtrelenmiRandevular || randevular;
+        }
+
+        // Tarih seçme fonksiyonu
+        function selectDate(cell, date) {
+            const selectedCells = document.querySelectorAll('.calendar td.selected');
+            selectedCells.forEach(cell => {
+                cell.classList.remove('selected');
+            });
             
-            // Container'ı temizle
-            container.innerHTML = '';
+            if (!cell.classList.contains('disabled')) {
+                cell.classList.add('selected');
+                selectedDate = date;
+                console.log("Seçilen tarih:", moment(selectedDate).format('DD.MM.YYYY'));
+                
+                // Simüle edilmiş boş saatleri rastgele güncelle
+                updateTimeSlots();
+            }
+        }
+
+        // Hizmet seçme fonksiyonu
+        function selectService(service) {
+            selectedServiceName = service;
+            document.getElementById('selectedService').textContent = service;
             
-            // Eğer randevu yoksa bilgi mesajı göster
-            if (gosterilecekRandevular.length === 0) {
-                container.innerHTML = '<div class="empty-message">Filtreye uygun randevu bulunmamaktadır.</div>';
+            // Hizmet kartlarının seçili durumunu güncelle
+            const serviceCards = document.querySelectorAll('.service-card');
+            serviceCards.forEach(card => {
+                if (card.querySelector('h3').textContent === service) {
+                    card.style.border = '2px solid var(--primary)';
+                } else {
+                    card.style.border = 'none';
+                }
+            });
+            
+            scrollToBooking();
+        }
+
+        // Saat seçme fonksiyonu
+        function selectTime(time) {
+            const timeSlots = document.querySelectorAll('.time-slot');
+            timeSlots.forEach(slot => {
+                if (slot.textContent === time) {
+                    slot.classList.add('selected');
+                    selectedTime = time;
+                } else {
+                    slot.classList.remove('selected');
+                }
+            });
+            
+            console.log("Seçilen saat:", time);
+        }
+
+        // Saat dilimlerini güncelleme fonksiyonu (simülasyon)
+        function updateTimeSlots() {
+            const timeSlots = document.querySelectorAll('.time-slot');
+            
+            // Tüm saatleri etkinleştir
+            timeSlots.forEach(slot => {
+                slot.classList.remove('disabled');
+            });
+            
+            // Rastgele birkaç saati devre dışı bırak (simülasyon amaçlı)
+            const disabledCount = Math.floor(Math.random() * 3) + 1;
+            const disabledIndices = new Set();
+            
+            while (disabledIndices.size < disabledCount) {
+                const randomIndex = Math.floor(Math.random() * timeSlots.length);
+                disabledIndices.add(randomIndex);
+            }
+            
+            disabledIndices.forEach(index => {
+                timeSlots[index].classList.add('disabled');
+                timeSlots[index].removeAttribute('onclick');
+            });
+        }
+
+        // Randevu alma fonksiyonu
+        function bookAppointment() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            
+            if (!name || !email || !phone) {
+                alert('Lütfen tüm gerekli alanları doldurun.');
                 return;
             }
             
-            // Randevuları tarihe göre sırala (en yakın tarih en üstte)
-            const siraliRandevular = [...gosterilecekRandevular].sort((a, b) => {
-                const tarihA = new Date(`${a.tarih}T${a.saat}`);
-                const tarihB = new Date(`${b.tarih}T${b.saat}`);
-                return tarihA - tarihB;
-            });
-            
-            // Her randevu için bir kart oluştur
-            siraliRandevular.forEach(randevu => {
-                const tarihObj = new Date(`${randevu.tarih}T${randevu.saat}`);
-                const formatlananTarih = new Intl.DateTimeFormat('tr-TR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }).format(tarihObj);
-                
-                const randevuItem = document.createElement('div');
-                randevuItem.className = 'randevu-item';
-                randevuItem.innerHTML = `
-                    <h3>${randevu.isim}</h3>
-                    <p><strong>Telefon:</strong> ${randevu.telefon}</p>
-                    <p><strong>Adres:</strong> ${randevu.adres}</p>
-                    <p><strong>Hizmet:</strong> ${randevu.hizmetAdi || 'Belirtilmemiş'} ${randevu.hizmetFiyati ? `(${randevu.hizmetFiyati} TL)` : ''}</p>
-                    <p><strong>Randevu:</strong> ${formatlananTarih}</p>
-                    ${randevu.notlar ? `<p><strong>Notlar:</strong> ${randevu.notlar}</p>` : ''}
-                    <div class="buttons">
-                        <button class="edit-btn" data-id="${randevu.id}">Düzenle</button>
-                        <button class="delete-btn" data-id="${randevu.id}">Sil</button>
-                    </div>
-                `;
-                
-                container.appendChild(randevuItem);
-            });
-            
-            // Düzenleme butonlarına olay dinleyicisi ekle
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    randevuyuDuzenle(id);
-                });
-            });
-            
-            // Silme butonlarına olay dinleyicisi ekle
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    randevuyuSil(id);
-                });
-            });
-        }
-        
-        // Randevu düzenleme fonksiyonu
-        function randevuyuDuzenle(id) {
-            const randevu = randevular.find(r => r.id === id);
-            if (!randevu) return;
-            
-            // Form alanlarını doldur
-            document.getElementById('isim').value = randevu.isim;
-            document.getElementById('telefon').value = randevu.telefon;
-            document.getElementById('adres').value = randevu.adres;
-            document.getElementById('hizmet').value = randevu.hizmetId || '';
-            document.getElementById('tarih').value = randevu.tarih;
-            document.getElementById('saat').value = randevu.saat;
-            document.getElementById('notlar').value = randevu.notlar || '';
-            
-            // Düzenleme modunu etkinleştir
-            duzenlemeModu = true;
-            duzenlemeMevcutId = id;
-            document.querySelector('#randevu-form button[type="submit"]').textContent = 'Randevuyu Güncelle';
-            
-            // Randevu ekleme tabına geç
-            document.querySelectorAll('.tab')[0].click();
-        }
-        
-        // Randevu silme fonksiyonu
-        function randevuyuSil(id) {
-            if (confirm('Bu randevuyu silmek istediğinizden emin misiniz?')) {
-                database.ref('randevular/' + id).remove()
-                    .then(() => {
-                        alert('Randevu silindi!');
-                    })
-                    .catch((error) => {
-                        console.error("Randevu silinemedi: ", error);
-                        alert("Randevu silinirken bir hata oluştu!");
-                    });
-            }
-        }
-        
-        // Filtreleme fonksiyonu
-        document.getElementById('filter-button').addEventListener('click', function() {
-            const tarihFiltre = document.getElementById('filter-tarih').value;
-            const isimFiltre = document.getElementById('filter-isim').value.toLowerCase();
-            const hizmetFiltre = document.getElementById('filter-hizmet').value;
-            
-            let filtrelenmiRandevular = [...randevular];
-            
-            // Tarih filtreleme
-            if (tarihFiltre) {
-                filtrelenmiRandevular = filtrelenmiRandevular.filter(r => r.tarih === tarihFiltre);
-            }
-            
-            // İsim filtreleme
-            if (isimFiltre) {
-                filtrelenmiRandevular = filtrelenmiRandevular.filter(r => 
-                    r.isim.toLowerCase().includes(isimFiltre)
-                );
-            }
-            
-            // Hizmet filtreleme
-            if (hizmetFiltre) {
-                filtrelenmiRandevular = filtrelenmiRandevular.filter(r => 
-                    r.hizmetId === hizmetFiltre
-                );
-            }
-            
-            randevulariGoster(filtrelenmiRandevular);
-        });
-        
-        // Hizmet ekleme formu
-        document.getElementById('hizmet-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const hizmetAdi = document.getElementById('hizmet-adi').value;
-            const hizmetFiyati = parseFloat(document.getElementById('hizmet-fiyati').value);
-            const hizmetSuresi = parseInt(document.getElementById('hizmet-suresi').value);
-            
-            const loadingElement = document.getElementById('loading-hizmet');
-            loadingElement.style.display = 'block';
-            
-            if (hizmetDuzenlemeModu && hizmetDuzenlemeMevcutId !== null) {
-                // Düzenleme modu
-                const hizmetVerisi = {
-                    adi: hizmetAdi,
-                    fiyat: hizmetFiyati,
-                    sure: hizmetSuresi,
-                    guncellemeTarihi: new Date().toISOString()
-                };
-                
-                database.ref('hizmetler/' + hizmetDuzenlemeMevcutId).update(hizmetVerisi)
-                    .then(() => {
-                        loadingElement.style.display = 'none';
-                        alert('Hizmet güncellendi!');
-                        document.getElementById('hizmet-form').reset();
-                        hizmetDuzenlemeModu = false;
-                        hizmetDuzenlemeMevcutId = null;
-                        document.querySelector('#hizmet-form button[type="submit"]').textContent = 'Hizmet Ekle';
-                    })
-                    .catch((error) => {
-                        loadingElement.style.display = 'none';
-                        console.error("Hizmet güncellenemedi: ", error);
-                        alert("Hizmet güncellenirken bir hata oluştu!");
-                    });
-            } else {
-                // Yeni hizmet
-                const yeniHizmet = {
-                    adi: hizmetAdi,
-                    fiyat: hizmetFiyati,
-                    sure: hizmetSuresi,
-                    olusturmaTarihi: new Date().toISOString(),
-                    guncellemeTarihi: new Date().toISOString()
-                };
-                
-                database.ref('hizmetler').push(yeniHizmet)
-                    .then(() => {
-                        loadingElement.style.display = 'none';
-                        alert('Hizmet başarıyla eklendi!');
-                        document.getElementById('hizmet-form').reset();
-                    })
-                    .catch((error) => {
-                        loadingElement.style.display = 'none';
-                        console.error("Hizmet eklenemedi: ", error);
-                        alert("Hizmet eklenirken bir hata oluştu!");
-                    });
-            }
-        });
-        
-        // Hizmetleri listele
-        function hizmetleriGoster() {
-            const container = document.getElementById('hizmet-container');
-            
-            // Container'ı temizle
-            container.innerHTML = '';
-            
-            // Eğer hizmet yoksa bilgi mesajı göster
-            if (hizmetler.length === 0) {
-                container.innerHTML = '<div class="empty-message">Henüz hizmet bulunmamaktadır.</div>';
+            if (!selectedServiceName) {
+                alert('Lütfen bir hizmet seçin.');
                 return;
             }
             
-            // Her hizmet için bir kart oluştur
-            hizmetler.forEach(hizmet => {
-                const hizmetItem = document.createElement('div');
-                hizmetItem.className = 'randevu-item';  // Aynı stil kullanılıyor
-                hizmetItem.innerHTML = `
-                    <h3>${hizmet.adi}</h3>
-                    <p><strong>Fiyat:</strong> ${hizmet.fiyat} TL</p>
-                    <p><strong>Süre
+            if (!selectedDate) {
+                alert('Lütfen bir tarih seçin.');
+                return;
+            }
+            
+            if (!selectedTime) {
+                alert('Lütfen bir saat seçin.');
+                return;
+            }
+            
+            // Simüle edilmiş randevu onayı
+            alert(`Randevunuz başarıyla oluşturuldu!\n\nHizmet: ${selectedServiceName}\nTarih: ${moment(selectedDate).format('DD.MM.YYYY')}\nSaat: ${selectedTime}\nAd Soyad: ${name}\nE-posta: ${email}\nTelefon: ${phone}`);
+            
+            // Form alanlarını temizle
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('notes').value = '';
+            
+            // Seçimleri sıfırla
+            const selectedCells = document.querySelectorAll('.calendar td.selected');
+            selectedCells.forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            const selectedTimeSlots = document.querySelectorAll('.time-slot.selected');
+            selectedTimeSlots.forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            
+            document.getElementById('selectedService').textContent = 'Henüz seçilmedi';
+            selectedDate = null;
+            selectedTime = null;
+            selectedServiceName = null;
+        }
+
+        // Randevu bölümüne kaydırma fonksiyonu
+        function scrollToBooking() {
+            document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
