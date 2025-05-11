@@ -838,14 +838,21 @@ function showAppointmentMenu(id) {
                 await loadData();
                 Swal.close();
             };
-            document.getElementById('callBtn').onclick = () => {
+            // Butonlar her zaman aktif, stil ile soluk
+            const callBtn = document.getElementById('callBtn');
+            const waBtn = document.getElementById('waBtn');
+            callBtn.style.opacity = phone ? '1' : '0.5';
+            callBtn.style.cursor = phone ? 'pointer' : 'not-allowed';
+            waBtn.style.opacity = phone ? '1' : '0.5';
+            waBtn.style.cursor = phone ? 'pointer' : 'not-allowed';
+            callBtn.onclick = () => {
                 if (phone) {
                     window.open('tel:' + phone.replace(/[^0-9+]/g, ''));
                 } else {
                     Swal.showValidationMessage('Telefon numarası yok!');
                 }
             };
-            document.getElementById('waBtn').onclick = () => {
+            waBtn.onclick = () => {
                 if (phone) {
                     window.open('https://wa.me/' + phone.replace(/[^0-9]/g, ''));
                 } else {
