@@ -814,19 +814,36 @@ function generateTimeOptions() {
 }
 // Randevu kartı menüsü (düzenle/sil)
 function showAppointmentMenu(id) {
+    const app = appointments.find(a => a.id === id);
+    if (!app) return;
+    const customer = (window.customers || []).find(c => c.id === app.customerId) || {};
+    const phone = customer.phone || '';
     Swal.fire({
         title: 'Randevu İşlemleri',
+        html: `
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <button id="editBtn" class="swal2-styled" style="background:#38b6ff;color:#fff;font-weight:600;">Düzenle</button>
+                <button id="deleteBtn" class="swal2-styled" style="background:#ef4444;color:#fff;font-weight:600;">Sil</button>
+                <button id="callBtn" class="swal2-styled" style="background:#10b981;color:#fff;font-weight:600;">Ara</button>
+                <button id="waBtn" class="swal2-styled" style="background:#25d366;color:#fff;font-weight:600;">WhatsApp</button>
+            </div>
+        `,
         showCancelButton: true,
-        showDenyButton: true,
-        confirmButtonText: 'Düzenle',
-        denyButtonText: 'Sil',
+        showConfirmButton: false,
         cancelButtonText: 'Kapat',
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            editAppointment(id);
-        } else if (result.isDenied) {
-            await database.ref('appointments/' + id).update({ status: 'cancelled' });
-            await loadData();
+        didOpen: () => {
+            document.getElementById('editBtn').onclick = () => { Swal.close(); editAppointment(id); };
+            document.getElementById('deleteBtn').onclick = async () => {
+                await database.ref('appointments/' + id).update({ status: 'cancelled' });
+                await loadData();
+                Swal.close();
+            };
+            document.getElementById('callBtn').onclick = () => {
+                if (phone) window.open('tel:' + phone.replace(/[^0-9+]/g, ''));
+            };
+            document.getElementById('waBtn').onclick = () => {
+                if (phone) window.open('https://wa.me/' + phone.replace(/[^0-9]/g, ''));
+            };
         }
     });
 }
