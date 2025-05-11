@@ -543,6 +543,13 @@ function showAddAppointmentModal() {
                     customerSelect.appendChild(opt);
                 });
             }
+            // Fazladan input/select/textarea'ları temizle (sadece belirli id'li olanlar kalsın)
+            setTimeout(() => {
+                const allowedIds = ['swalCustomer','swalService','swalDate','swalTime','swalAddress'];
+                document.querySelectorAll('.swal2-input, .swal2-select, .swal2-textarea').forEach(el => {
+                    if (!allowedIds.includes(el.id)) el.remove();
+                });
+            }, 50);
             // Yeni müşteri butonu
             document.getElementById('newCustomerBtn').onclick = () => {
                 Swal.fire({
@@ -563,7 +570,6 @@ function showAddAppointmentModal() {
             };
             // Randevuyu Oluştur butonu
             const footer = Swal.getActions();
-            // Önceki fazladan butonları temizle
             while (footer.firstChild) footer.removeChild(footer.firstChild);
             const createBtn = document.createElement('button');
             createBtn.textContent = 'Randevuyu Oluştur';
@@ -596,6 +602,20 @@ function showAddAppointmentModal() {
                 Swal.close();
             };
             footer.appendChild(createBtn);
+            // Kapat butonu
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Kapat';
+            closeBtn.style.background = '#6b7280';
+            closeBtn.style.color = '#fff';
+            closeBtn.style.borderRadius = '12px';
+            closeBtn.style.fontSize = '1.05em';
+            closeBtn.style.width = '100%';
+            closeBtn.style.marginTop = '12px';
+            closeBtn.style.padding = '0.9em 0';
+            closeBtn.style.border = 'none';
+            closeBtn.style.fontWeight = '600';
+            closeBtn.onclick = () => Swal.close();
+            footer.appendChild(closeBtn);
         }
     });
 }
