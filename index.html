@@ -725,6 +725,7 @@ function showAddAppointmentModal() {
                                 <input id='newCustomerPhone' class='swal2-input phone-input-fix' placeholder='5XXXXXXXXX' maxlength='10' pattern='[0-9]*' inputmode='numeric' style='flex:1 1 0px;width:100%;height:44px;line-height:44px;border-radius:0 22px 22px 0;border-left:none;padding-left:0;margin:0;box-sizing:border-box;'>
                             </div>
                         </div>
+                        <input id='newCustomerAddress' class='swal2-input' placeholder='Adres (isteğe bağlı)'>
                     `,
                     showCancelButton: true,
                     confirmButtonText: 'Ekle',
@@ -732,7 +733,7 @@ function showAddAppointmentModal() {
                     didOpen: () => {
                         setTimeout(() => {
                             document.querySelectorAll('.swal2-input, .swal2-select, .swal2-textarea').forEach(el => {
-                                if (el.id !== 'newCustomerName' && el.id !== 'newCustomerPhone') el.remove();
+                                if (!["newCustomerName","newCustomerPhone","newCustomerAddress"].includes(el.id)) el.remove();
                             });
                             // Sadece rakam girilmesini sağla
                             const phoneInput = document.getElementById('newCustomerPhone');
@@ -744,12 +745,13 @@ function showAddAppointmentModal() {
                     preConfirm: async () => {
                         const name = document.getElementById('newCustomerName').value;
                         const phone = document.getElementById('newCustomerPhone').value;
+                        const address = document.getElementById('newCustomerAddress').value;
                         if (!name) { Swal.showValidationMessage('İsim girin'); return false; }
                         if (!phone || phone.length !== 10) { Swal.showValidationMessage('Geçerli bir telefon numarası girin'); return false; }
-                        const ref = await database.ref('customers').push({ name, phone: '+90' + phone });
+                        const ref = await database.ref('customers').push({ name, phone: '+90' + phone, address });
                         if (!window.customers) window.customers = [];
-                        window.customers.push({ id: ref.key, name, phone: '+90' + phone });
-                        showAddAppointmentModal();
+                        window.customers.push({ id: ref.key, name, phone: '+90' + phone, address });
+                        Swal.fire('Başarılı', 'Müşteri eklendi!', 'success');
                     }
                 });
             };
@@ -816,53 +818,17 @@ function generateTimeOptions() {
 function showAppointmentMenu(id) {
     const app = appointments.find(a => a.id === id);
     if (!app) return;
-    const customer = (window.customers || []).find(c => c.id === app.customerId) || {};
-    let phone = customer.phone || app.phone || '';
-    if (!phone && app.customerId && typeof app.customerId === 'string' && app.customerId.startsWith('+90')) {
-        phone = app.customerId;
-    }
-    console.log('app:', app, 'customer:', customer, 'phone:', phone);
     Swal.fire({
         title: 'Randevu İşlemleri',
-        html: `
-            <div style="display:flex;flex-direction:column;gap:12px;">
-                <button id="editBtn" class="swal2-styled" style="background:#38b6ff;color:#fff;font-weight:600;">Düzenle</button>
-                <button id="deleteBtn" class="swal2-styled" style="background:#ef4444;color:#fff;font-weight:600;">Sil</button>
-                <button id="callBtn" class="swal2-styled" style="background:#10b981;color:#fff;font-weight:600;${!phone ? 'opacity:0.5;cursor:not-allowed;' : ''}">Ara</button>
-                <button id="waBtn" class="swal2-styled" style="background:#25d366;color:#fff;font-weight:600;${!phone ? 'opacity:0.5;cursor:not-allowed;' : ''}">WhatsApp</button>
-            </div>
-        `,
+        html: `<div style="text-align:center;color:#888;font-size:1.1em;">İşlem yok</div>`,
         showCancelButton: true,
         showConfirmButton: false,
         cancelButtonText: 'Kapat',
         didOpen: () => {
-            document.getElementById('editBtn').onclick = () => { Swal.close(); editAppointment(id); };
-            document.getElementById('deleteBtn').onclick = async () => {
-                await database.ref('appointments/' + id).update({ status: 'cancelled' });
-                await loadData();
-                Swal.close();
-            };
-            // Butonlar her zaman aktif, stil ile soluk
-            const callBtn = document.getElementById('callBtn');
-            const waBtn = document.getElementById('waBtn');
-            callBtn.style.opacity = phone ? '1' : '0.5';
-            callBtn.style.cursor = phone ? 'pointer' : 'not-allowed';
-            waBtn.style.opacity = phone ? '1' : '0.5';
-            waBtn.style.cursor = phone ? 'pointer' : 'not-allowed';
-            callBtn.onclick = () => {
-                if (phone) {
-                    window.open('tel:' + phone.replace(/[^0-9+]/g, ''));
-                } else {
-                    Swal.showValidationMessage('Telefon numarası yok!');
-                }
-            };
-            waBtn.onclick = () => {
-                if (phone) {
-                    window.open('https://wa.me/' + phone.replace(/[^0-9]/g, ''));
-                } else {
-                    Swal.showValidationMessage('Telefon numarası yok!');
-                }
-            };
+            Swal.getPopup().querySelectorAll('input, select, textarea, form').forEach(el => el.remove());
+            Array.from(Swal.getHtmlContainer().children).forEach(child => {
+                if (!child.textContent.includes('İşlem yok')) child.remove();
+            });
         }
     });
 }
@@ -917,6 +883,48 @@ document.addEventListener('visibilitychange', function() {
     window.location.reload();
   }
 });
+
+// Kullanıcı ikonuna tıklayınca müşteri listesi modalı aç
+const userBtn = document.querySelector('nav button:nth-child(2)');
+if (userBtn) {
+    userBtn.onclick = () => {
+        let html = '';
+        if (window.customers && window.customers.length > 0) {
+            html = '<ul style="padding:0;list-style:none;">' + window.customers.map(c => `<li style='padding:8px 0;border-bottom:1px solid #eee;'><button type="button" data-id="${c.id}" style="background:none;border:none;padding:0;margin:0;color:#1e3a8a;font-weight:600;cursor:pointer;width:100%;text-align:center;">${c.name}</button></li>`).join('') + '</ul>';
+        } else {
+            html = '<div style="color:#888;text-align:center;">Kayıtlı müşteri yok</div>';
+        }
+        Swal.fire({
+            title: 'Müşteri Listesi',
+            html,
+            showCancelButton: false,
+            showConfirmButton: false,
+            cancelButtonText: 'Kapat',
+            focusConfirm: false,
+            confirmButtonText: 'Kapat',
+            didOpen: () => {
+                Swal.getPopup().querySelectorAll('input, select, textarea, form').forEach(el => el.remove());
+                Array.from(Swal.getHtmlContainer().children).forEach(child => {
+                    if (!child.textContent.includes('Müşteri Listesi') && !child.textContent.trim()) child.remove();
+                });
+                // Müşteri ismine tıklama
+                Swal.getHtmlContainer().querySelectorAll('button[data-id]').forEach(btn => {
+                    btn.onclick = () => {
+                        const id = btn.getAttribute('data-id');
+                        const c = (window.customers || []).find(x => x.id === id);
+                        if (c) {
+                            Swal.fire({
+                                title: c.name,
+                                html: `<div style='text-align:left;font-size:1.1em;'><b>Telefon:</b> ${c.phone || '-'}<br><b>Adres:</b> ${c.address || '-'}</div>`,
+                                confirmButtonText: 'Kapat',
+                            });
+                        }
+                    };
+                });
+            }
+        });
+    };
+}
     </script>
 </body>
 </html>
