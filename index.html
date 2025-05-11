@@ -557,8 +557,10 @@ function showAddAppointmentModal() {
                     html: `
                         <input id='newCustomerName' class='swal2-input' placeholder='Müşteri Adı'>
                         <div style='position:relative;width:100%;'>
-                            <span style='position:absolute;left:18px;top:50%;transform:translateY(-50%);color:#888;font-size:1.05em;'>+90</span>
-                            <input id='newCustomerPhone' class='swal2-input' placeholder='Telefon Numarası' style='padding-left:48px;width:100%;' maxlength='10' pattern='[0-9]*' inputmode='numeric'>
+                            <div style='display:flex;align-items:center;width:100%;gap:6px;'>
+                                <span style='flex:0 0 38px;display:inline-block;color:#888;font-size:1.05em;text-align:center;'>+90</span>
+                                <input id='newCustomerPhone' class='swal2-input' placeholder='5XXXXXXXXX' style='flex:1 1 0px;padding-left:0;width:100%;' maxlength='10' pattern='[0-9]*' inputmode='numeric'>
+                            </div>
                         </div>
                     `,
                     showCancelButton: true,
