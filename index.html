@@ -219,8 +219,36 @@
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
+<body class="bg-white">
+    <div class="container mx-auto px-4 py-4">
+        <!-- Custom Top Bar -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-end">
+                <span class="font-extrabold text-2xl tracking-tight">PLANLA</span>
+                <span class="ml-1 text-xs font-semibold tracking-widest">PLUS</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="text-gray-500 text-xl"><i class="fas fa-share-square"></i></button>
+                <button class="text-gray-500 text-xl"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+        <!-- Filters and View Switch -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <select class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-royal-blue w-[48%]">
+                <option>Tüm Personel</option>
+            </select>
+            <select class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-royal-blue w-[48%]">
+                <option>Tüm Hizmetler</option>
+            </select>
+            <div class="flex items-center space-x-2 ml-auto">
+                <button class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-500 text-lg"><i class="fas fa-list"></i></button>
+                <button class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-500 text-lg"><i class="fas fa-calendar-alt"></i></button>
+            </div>
+        </div>
+        <!-- Month Navigation -->
+        <div class="flex justify-center mb-2">
+            <button class="rounded-lg border border-gray-200 bg-white px-6 py-2 text-gray-600 font-medium">Önceki Ay</button>
+        </div>
         <!-- Header -->
         <header class="bg-royal-blue text-white p-4 rounded-lg shadow-lg mb-6">
             <div class="flex justify-between items-center">
@@ -259,181 +287,18 @@
 
         <!-- Main Content -->
         <div id="mainContent">
-            <!-- Appointments Section -->
-            <div id="appointmentsSection" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: Appointment Form -->
-                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-bold mb-4 text-royal-blue">Yeni Randevu Oluştur</h2>
-                    <form id="appointmentForm" class="space-y-4">
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="customerName">İsim Soyisim</label>
-                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerName" type="text" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="customerPhone">Telefon Numarası</label>
-                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerPhone" type="tel" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="customerAddress">Adres</label>
-                            <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerAddress" rows="3" required></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="appointmentDate">Tarih</label>
-                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="appointmentDate" type="date" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="appointmentTime">Saat</label>
-                            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="appointmentTime" required>
-                                <option value="">Saat Seçiniz</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="serviceSelect">Hizmet</label>
-                            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="serviceSelect" required>
-                                <option value="">Hizmet Seçiniz</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="repeatAppointment">Tekrarlama</label>
-                            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="repeatAppointment">
-                                <option value="none">Tekrarlama</option>
-                                <option value="daily">Günlük</option>
-                                <option value="weekly">Haftalık</option>
-                                <option value="monthly">Aylık</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="appointmentNotes">Notlar</label>
-                            <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="appointmentNotes" rows="2"></textarea>
-                        </div>
-                        <button class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">
-                            Randevu Oluştur
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Right Column: Active Appointments -->
-                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-royal-blue">Aktif Randevular</h2>
-                        <div class="flex space-x-2">
-                            <button id="filterBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-1 px-3 rounded text-sm">
-                                <i class="fas fa-filter mr-1"></i>Filtrele
-                            </button>
-                            <button id="exportBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-1 px-3 rounded text-sm">
-                                <i class="fas fa-download mr-1"></i>Dışa Aktar
-                            </button>
-                        </div>
-                    </div>
-                    <div id="appointmentList" class="space-y-4">
-                        <!-- Randevular burada listelenecek -->
-                    </div>
-                </div>
+            <!-- Günler ve Randevu Listesi -->
+            <div class="mt-4" id="appointmentDaysList">
+                <!-- Dinamik olarak JS ile doldurulacak -->
             </div>
-
-            <!-- Customers Section -->
-            <div id="customersSection" class="hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-royal-blue">Müşteri Yönetimi</h2>
-                        <div class="flex space-x-2">
-                            <input type="text" id="customerSearch" placeholder="Müşteri Ara..." class="px-4 py-2 border rounded-lg">
-                            <button id="addCustomerBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded">
-                                <i class="fas fa-plus mr-1"></i>Yeni Müşteri
-                            </button>
-                        </div>
-                    </div>
-                    <div id="customersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Müşteriler burada listelenecek -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Services Section -->
-            <div id="servicesSection" class="hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-royal-blue">Hizmet Yönetimi</h2>
-                        <button id="addServiceBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded">
-                            <i class="fas fa-plus mr-1"></i>Yeni Hizmet
-                        </button>
-                    </div>
-                    <div id="servicesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Hizmetler burada listelenecek -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports Section -->
-            <div id="reportsSection" class="hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-bold text-royal-blue mb-4">Raporlar ve Analizler</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Gelir Raporu -->
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h3 class="font-bold mb-2">Gelir Raporu</h3>
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                        <!-- Randevu İstatistikleri -->
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h3 class="font-bold mb-2">Randevu İstatistikleri</h3>
-                            <canvas id="appointmentChart"></canvas>
-                        </div>
-                        <!-- Müşteri Analizi -->
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h3 class="font-bold mb-2">Müşteri Analizi</h3>
-                            <canvas id="customerChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Settings Section -->
-            <div id="settingsSection" class="hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-bold text-royal-blue mb-4">Sistem Ayarları</h2>
-                    <div class="space-y-6">
-                        <!-- Çalışma Saatleri -->
-                        <div>
-                            <h3 class="font-bold mb-2">Çalışma Saatleri</h3>
-                            <div id="workingHours" class="space-y-2">
-                                <!-- Çalışma saatleri ayarları burada olacak -->
-                            </div>
-                        </div>
-                        <!-- Bildirim Ayarları -->
-                        <div>
-                            <h3 class="font-bold mb-2">Bildirim Ayarları</h3>
-                            <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" class="form-checkbox" id="emailNotifications">
-                                    <span class="ml-2">E-posta Bildirimleri</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" class="form-checkbox" id="smsNotifications">
-                                    <span class="ml-2">SMS Bildirimleri</span>
-                                </label>
-                            </div>
-                        </div>
-                        <!-- Yedekleme Ayarları -->
-                        <div>
-                            <h3 class="font-bold mb-2">Yedekleme Ayarları</h3>
-                            <div class="space-y-2">
-                                <button id="backupNow" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded">
-                                    Şimdi Yedekle
-                                </button>
-                                <div class="mt-2">
-                                    <label class="block text-sm font-medium text-gray-700">Otomatik Yedekleme</label>
-                                    <select id="backupFrequency" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                        <option value="daily">Günlük</option>
-                                        <option value="weekly">Haftalık</option>
-                                        <option value="monthly">Aylık</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Alt Sabit Menü -->
+            <nav class="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 rounded-t-3xl flex justify-between items-center px-6 py-2 h-20" style="box-shadow: 0 -2px 10px rgba(0,0,0,0.08);">
+                <button class="text-gray-400 text-2xl"><i class="fas fa-chart-line"></i></button>
+                <button class="text-gray-400 text-2xl"><i class="fas fa-user"></i></button>
+                <button class="bg-lime-300 text-gray-900 rounded-full w-14 h-14 flex items-center justify-center text-3xl shadow-lg -mt-8 border-4 border-white"><i class="fas fa-plus"></i></button>
+                <button class="text-gray-400 text-2xl"><i class="fas fa-calendar-alt"></i></button>
+                <button class="text-gray-400 text-2xl"><i class="fas fa-ellipsis-h"></i></button>
+            </nav>
         </div>
     </div>
 
@@ -722,78 +587,70 @@
             }
         }
 
-        // Randevuları görüntüle
-        function displayAppointments() {
-            try {
-                console.log('Randevular görüntüleniyor');
-                const appointmentList = document.getElementById('appointmentList');
-                if (!appointmentList) {
-                    console.error('appointmentList elementi bulunamadı');
-                    return;
-                }
+        // Randevuları günlere göre gruplayıp yeni tasarımla göster
+        function displayAppointmentsByDay() {
+            const container = document.getElementById('appointmentDaysList');
+            if (!container) return;
+            container.innerHTML = '';
 
-                // Listeyi temizle
-                appointmentList.innerHTML = '';
-            
-                // Randevuları filtrele ve sırala
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-            
-                const upcomingAppointments = appointments
-                    .filter(appointment => {
-                        const appointmentDate = new Date(appointment.date);
-                        appointmentDate.setHours(0, 0, 0, 0);
-                        return appointmentDate.getTime() >= today.getTime() && appointment.status !== 'cancelled';
-                    })
-                    .sort((a, b) => {
-                        const dateA = new Date(`${a.date}T${a.time}`);
-                        const dateB = new Date(`${b.date}T${b.time}`);
-                        return dateA - dateB;
-                    });
-            
-                if (upcomingAppointments.length === 0) {
-                    appointmentList.innerHTML = '<p class="text-gray-500 text-center">Yaklaşan randevu bulunmuyor.</p>';
-                    return;
-                }
+            if (!appointments || appointments.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center mt-8">Yaklaşan randevu bulunmuyor.</p>';
+                return;
+            }
 
-                // Randevuları listele
-                upcomingAppointments.forEach(appointment => {
+            // Randevuları tarihe göre grupla
+            const grouped = {};
+            appointments.forEach(app => {
+                if (app.status === 'cancelled') return;
+                if (!grouped[app.date]) grouped[app.date] = [];
+                grouped[app.date].push(app);
+            });
+
+            // Tarihleri sırala (en yakın önce)
+            const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
+
+            sortedDates.forEach(dateStr => {
+                const dayApps = grouped[dateStr].sort((a, b) => a.time.localeCompare(b.time));
+                const dateObj = new Date(dateStr);
+                const dayName = dateObj.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+                // Başlık
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'mb-6';
+                dayDiv.innerHTML = `
+                    <div class="font-bold text-lg text-gray-700 mb-2">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}</div>
+                    <div class="border-b border-gray-200 mb-2"></div>
+                `;
+                // Randevu kartları
+                dayApps.forEach(app => {
                     const card = document.createElement('div');
-                    card.className = 'bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200';
-                    
-                    const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
-                    const formattedDate = appointmentDate.toLocaleDateString('tr-TR', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                    
+                    card.className = 'flex items-center mb-4';
                     card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="font-bold text-lg">${appointment.customerName}</h3>
-                                <p class="text-gray-600">${appointment.serviceName}</p>
-                                <p class="text-gray-600">${formattedDate} - ${appointment.time}</p>
-                                ${appointment.notes ? `<p class="text-gray-500 mt-2">${appointment.notes}</p>` : ''}
-                            </div>
-                            <div class="flex space-x-2">
-                                <button onclick="editAppointment('${appointment.id}')" class="text-royal-blue hover:text-blue-800">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="cancelAppointment('${appointment.id}')" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                        <div class="w-1.5 h-12 rounded bg-pink-300 mr-3"></div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-700">${app.customerName}</div>
+                            <div class="text-gray-500 text-base">${app.serviceName}</div>
+                        </div>
+                        <div class="flex flex-col items-end ml-2">
+                            <span class="text-gray-600 text-base">${app.time}</span>
+                            <span class="text-gray-600 text-base">${app.serviceEndTime ? app.serviceEndTime : ''}</span>
+                            <button class="text-gray-400 text-xl mt-1"><i class="fas fa-ellipsis-v"></i></button>
                         </div>
                     `;
-                    
-                    appointmentList.appendChild(card);
+                    dayDiv.appendChild(card);
                 });
-                console.log('Randevular görüntülendi:', upcomingAppointments.length);
-            } catch (error) {
-                console.error('Randevuları görüntüleme hatası:', error);
-            }
+                container.appendChild(dayDiv);
+            });
+
+            // Sonraki Ay butonu
+            const nextBtnDiv = document.createElement('div');
+            nextBtnDiv.className = 'flex justify-center mb-24';
+            nextBtnDiv.innerHTML = '<button class="rounded-lg border border-gray-200 bg-white px-6 py-2 text-gray-600 font-medium">Sonraki Ay</button>';
+            container.appendChild(nextBtnDiv);
+        }
+
+        // displayAppointments fonksiyonunu güncelle veya yönlendir
+        function displayAppointments() {
+            displayAppointmentsByDay();
         }
         
         // Randevu iptal etme
