@@ -416,8 +416,26 @@
                             duration: servicesData[key].duration
                         });
                     });
+                } else {
+                    console.log('Firebase\'de servis bulunamadı, örnek servisler ekleniyor');
+                    // Örnek servisler ekle
+                    const exampleServices = [
+                        { name: 'Saç Kesimi', duration: 30 },
+                        { name: 'Saç Boyama', duration: 60 },
+                        { name: 'Manikür', duration: 45 },
+                        { name: 'Pedikür', duration: 45 }
+                    ];
+                    
+                    for (const service of exampleServices) {
+                        const newServiceRef = await database.ref('services').push(service);
+                        services.push({
+                            id: newServiceRef.key,
+                            ...service
+                        });
+                    }
+                    console.log('Örnek servisler eklendi:', services);
                 }
-                console.log('Servisler yüklendi:', services);
+                
                 await populateServiceOptions();
                 
                 // Randevuları yükle
@@ -1352,88 +1370,148 @@
             settingsTab.addEventListener('click', () => showSection('settings'));
             
             // Karanlık mod toggle
-            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const isDarkMode = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('darkMode', isDarkMode);
+                });
+            }
             
             // Kullanıcı menüsü
-            document.getElementById('userMenuBtn').addEventListener('click', toggleUserMenu);
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userMenu = document.getElementById('userMenu');
+            if (userMenuBtn && userMenu) {
+                userMenuBtn.addEventListener('click', () => {
+                    userMenu.classList.toggle('hidden');
+                });
+            }
             
             // Form submit
-            appointmentForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                console.log('Form gönderildi');
-                
-                try {
-                    // Form verilerini al
-                    const formData = {
-                        customerName: document.getElementById('customerName').value,
-                        customerPhone: document.getElementById('customerPhone').value,
-                        customerAddress: document.getElementById('customerAddress').value,
-                        date: document.getElementById('appointmentDate').value,
-                        time: document.getElementById('appointmentTime').value,
-                        serviceId: document.getElementById('serviceSelect').value,
-                        repeat: document.getElementById('repeatAppointment').value,
-                        notes: document.getElementById('appointmentNotes').value
-                    };
+            const appointmentForm = document.getElementById('appointmentForm');
+            if (appointmentForm) {
+                appointmentForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    console.log('Form gönderildi');
+                    
+                    try {
+                        // Form verilerini al
+                        const formData = {
+                            customerName: document.getElementById('customerName').value,
+                            customerPhone: document.getElementById('customerPhone').value,
+                            customerAddress: document.getElementById('customerAddress').value,
+                            date: document.getElementById('appointmentDate').value,
+                            time: document.getElementById('appointmentTime').value,
+                            serviceId: document.getElementById('serviceSelect').value,
+                            repeat: document.getElementById('repeatAppointment').value,
+                            notes: document.getElementById('appointmentNotes').value
+                        };
 
-                    console.log('Form verileri:', formData);
+                        console.log('Form verileri:', formData);
 
-                    // Validasyon
-                    if (!formData.customerName || !formData.customerPhone || !formData.date || !formData.time || !formData.serviceId) {
-                        throw new Error('Lütfen tüm zorunlu alanları doldurun.');
+                        // Validasyon
+                        if (!formData.customerName || !formData.customerPhone || !formData.date || !formData.time || !formData.serviceId) {
+                            throw new Error('Lütfen tüm zorunlu alanları doldurun.');
+                        }
+
+                        // Seçilen hizmeti bul
+                        const selectedService = services.find(s => s.id === formData.serviceId);
+                        console.log('Seçilen hizmet:', selectedService);
+
+                        if (!selectedService) {
+                            throw new Error('Lütfen geçerli bir hizmet seçin.');
+                        }
+
+                        // Randevu nesnesini oluştur
+                        const appointment = {
+                            ...formData,
+                            serviceName: selectedService.name,
+                            serviceDuration: selectedService.duration,
+                            status: 'pending',
+                            createdAt: new Date().toISOString()
+                        };
+
+                        console.log('Oluşturulan randevu:', appointment);
+
+                        // Firebase'e kaydet
+                        const appointmentRef = await database.ref('appointments').push(appointment);
+                        console.log('Randevu kaydedildi:', appointmentRef.key);
+
+                        // Müşteriyi kaydet/güncelle
+                        await updateCustomer(appointment);
+
+                        // Formu temizle
+                        appointmentForm.reset();
+                        document.getElementById('appointmentDate').value = new Date().toISOString().split('T')[0];
+
+                        // Başarı mesajı göster
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Başarılı!',
+                            text: 'Randevu başarıyla oluşturuldu.'
+                        });
+
+                        // Randevu listesini güncelle
+                        displayAppointments();
+
+                    } catch (error) {
+                        console.error('Randevu oluşturma hatası:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Hata!',
+                            text: error.message || 'Randevu oluşturulurken bir hata oluştu.'
+                        });
                     }
-
-                    // Seçilen hizmeti bul
-                    const selectedService = services.find(s => s.id === formData.serviceId);
-                    console.log('Seçilen hizmet:', selectedService);
-
-                    if (!selectedService) {
-                        throw new Error('Lütfen geçerli bir hizmet seçin.');
-                    }
-
-                    // Randevu nesnesini oluştur
-                    const appointment = {
-                        ...formData,
-                        serviceName: selectedService.name,
-                        serviceDuration: selectedService.duration,
-                        status: 'pending',
-                        createdAt: new Date().toISOString()
-                    };
-
-                    console.log('Oluşturulan randevu:', appointment);
-
-                    // Firebase'e kaydet
-                    const appointmentRef = await database.ref('appointments').push(appointment);
-                    console.log('Randevu kaydedildi:', appointmentRef.key);
-
-                    // Müşteriyi kaydet/güncelle
-                    await updateCustomer(appointment);
-
-                    // Formu temizle
-                    appointmentForm.reset();
-                    appointmentDateInput.value = new Date().toISOString().split('T')[0];
-
-                    // Başarı mesajı göster
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Başarılı!',
-                        text: 'Randevu başarıyla oluşturuldu.'
-                    });
-
-                    // Randevu listesini güncelle
-                    displayAppointments();
-
-                } catch (error) {
-                    console.error('Randevu oluşturma hatası:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Hata!',
-                        text: error.message || 'Randevu oluşturulurken bir hata oluştu.'
-                    });
-                }
-            });
+                });
+            }
             
             // Müşteri arama
-            document.getElementById('customerSearch').addEventListener('input', handleCustomerSearch);
+            const customerSearch = document.getElementById('customerSearch');
+            if (customerSearch) {
+                customerSearch.addEventListener('input', handleCustomerSearch);
+            }
+        }
+
+        // Section gösterme fonksiyonu
+        function showSection(sectionName) {
+            // Tüm section'ları gizle
+            appointmentsSection.classList.add('hidden');
+            customersSection.classList.add('hidden');
+            servicesSection.classList.add('hidden');
+            reportsSection.classList.add('hidden');
+            settingsSection.classList.add('hidden');
+            
+            // Tüm tab butonlarının stilini sıfırla
+            appointmentsTab.classList.remove('bg-royal-blue', 'text-white');
+            customersTab.classList.remove('bg-royal-blue', 'text-white');
+            servicesTab.classList.remove('bg-royal-blue', 'text-white');
+            reportsTab.classList.remove('bg-royal-blue', 'text-white');
+            settingsTab.classList.remove('bg-royal-blue', 'text-white');
+            
+            // Seçilen section'ı göster
+            switch(sectionName) {
+                case 'appointments':
+                    appointmentsSection.classList.remove('hidden');
+                    appointmentsTab.classList.add('bg-royal-blue', 'text-white');
+                    break;
+                case 'customers':
+                    customersSection.classList.remove('hidden');
+                    customersTab.classList.add('bg-royal-blue', 'text-white');
+                    break;
+                case 'services':
+                    servicesSection.classList.remove('hidden');
+                    servicesTab.classList.add('bg-royal-blue', 'text-white');
+                    break;
+                case 'reports':
+                    reportsSection.classList.remove('hidden');
+                    reportsTab.classList.add('bg-royal-blue', 'text-white');
+                    break;
+                case 'settings':
+                    settingsSection.classList.remove('hidden');
+                    settingsTab.classList.add('bg-royal-blue', 'text-white');
+                    break;
+            }
         }
     </script>
 </body>
