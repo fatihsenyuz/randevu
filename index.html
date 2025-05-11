@@ -433,6 +433,40 @@
         .appointment-card-row {
             flex-wrap: wrap !important;
         }
+        .filter-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .filter-row select {
+            width: 100% !important;
+            margin-bottom: 0 !important;
+        }
+        .view-switch-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .month-nav-row {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .month-nav-row button {
+            font-size: 1rem !important;
+            padding: 0.5rem 1.2rem !important;
+        }
+        .appointment-card-row {
+            padding: 0.5rem 0.2rem;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .appointment-card-row .right-menu {
+            margin-left: 0.5rem !important;
+        }
     }
     </style>
 </head>
@@ -450,20 +484,19 @@
             </div>
         </div>
         <!-- Filters and View Switch -->
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <select class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-royal-blue w-[48%]">
+        <div class="filter-row">
+            <select class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-royal-blue">
                 <option>Tüm Personel</option>
             </select>
-            <select class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-royal-blue w-[48%]">
+            <select class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-royal-blue">
                 <option>Tüm Hizmetler</option>
             </select>
-            <div class="flex items-center space-x-2 ml-auto">
-                <button class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-500 text-lg"><i class="fas fa-list"></i></button>
-                <button class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-500 text-lg"><i class="fas fa-calendar-alt"></i></button>
-            </div>
         </div>
-        <!-- Month Navigation -->
-        <div class="flex justify-center mb-2">
+        <div class="view-switch-row">
+            <button class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-500 text-lg"><i class="fas fa-list"></i></button>
+            <button class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-500 text-lg"><i class="fas fa-calendar-alt"></i></button>
+        </div>
+        <div class="month-nav-row">
             <button class="rounded-lg border border-gray-200 bg-white px-6 py-2 text-gray-600 font-medium">Önceki Ay</button>
         </div>
         <!-- Günler ve Randevu Listesi -->
