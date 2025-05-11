@@ -379,151 +379,223 @@
         const reportsSection = document.getElementById('reportsSection');
         const settingsSection = document.getElementById('settingsSection');
         
-        // Takvim başlatma ve güncelleme fonksiyonlarını kaldır
-        function initializeApp() {
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Sayfa yüklendi');
+            await initializeApp();
+            setupEventListeners();
+            await loadFromFirebase();
+        });
+
+        // Uygulama başlatma
+        async function initializeApp() {
             console.log('Uygulama başlatılıyor');
-            // Tarihi bugün olarak ayarla
             const today = new Date();
             const formattedDate = today.toISOString().split('T')[0];
-            appointmentDateInput.value = formattedDate;
+            document.getElementById('appointmentDate').value = formattedDate;
             
-            // Servis seçeneklerini doldur
-            populateServiceOptions();
-            
-            // Saat seçeneklerini doldur
-            populateTimeOptions();
-            
-            // Karanlık mod kontrolü
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.body.classList.add('dark-mode');
-            }
+            await populateServiceOptions();
+            await populateTimeOptions();
         }
 
         // Firebase'den veri yükleme
-        function loadFromFirebase() {
-            console.log('Firebase\'den veri yükleniyor');
-            
-            // Servisleri yükle
-            database.ref('services').on('value', (snapshot) => {
-                const servicesData = snapshot.val();
+        async function loadFromFirebase() {
+            try {
+                console.log('Firebase\'den veri yükleniyor');
+                
+                // Servisleri yükle
+                const servicesSnapshot = await database.ref('services').once('value');
+                const servicesData = servicesSnapshot.val();
                 services = [];
+                
                 if (servicesData) {
                     Object.keys(servicesData).forEach(key => {
                         services.push({
-                            ...servicesData[key],
-                            id: key
+                            id: key,
+                            name: servicesData[key].name,
+                            duration: servicesData[key].duration
                         });
                     });
                 }
                 console.log('Servisler yüklendi:', services);
-                populateServiceOptions();
-                displayServices();
-            });
-            
-            // Randevuları yükle
-            database.ref('appointments').on('value', (snapshot) => {
-                const appointmentsData = snapshot.val();
+                await populateServiceOptions();
+                
+                // Randevuları yükle
+                const appointmentsSnapshot = await database.ref('appointments').once('value');
+                const appointmentsData = appointmentsSnapshot.val();
                 appointments = [];
+                
                 if (appointmentsData) {
                     Object.keys(appointmentsData).forEach(key => {
                         appointments.push({
-                            ...appointmentsData[key],
-                            id: key
+                            id: key,
+                            ...appointmentsData[key]
                         });
                     });
                 }
                 console.log('Randevular yüklendi:', appointments);
                 displayAppointments();
-            });
-            
-            // Müşterileri yükle
-            database.ref('customers').on('value', (snapshot) => {
-                const customersData = snapshot.val();
+                
+                // Müşterileri yükle
+                const customersSnapshot = await database.ref('customers').once('value');
+                const customersData = customersSnapshot.val();
                 customers = [];
+                
                 if (customersData) {
                     Object.keys(customersData).forEach(key => {
                         customers.push({
-                            ...customersData[key],
-                            id: key
+                            id: key,
+                            ...customersData[key]
                         });
                     });
                 }
                 console.log('Müşteriler yüklendi:', customers);
                 displayCustomers();
-            });
-            
-            // Ayarları yükle
-            database.ref('settings').on('value', (snapshot) => {
-                settings = snapshot.val() || settings;
-                updateSettingsUI();
-            });
+                
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata!',
+                    text: 'Veriler yüklenirken bir hata oluştu.'
+                });
+            }
+        }
+
+        // Servis seçeneklerini doldur
+        async function populateServiceOptions() {
+            try {
+                console.log('Servis seçenekleri dolduruluyor');
+                const serviceSelect = document.getElementById('serviceSelect');
+                if (!serviceSelect) {
+                    console.error('serviceSelect elementi bulunamadı');
+                    return;
+                }
+
+                // Select'i temizle
+                serviceSelect.innerHTML = '<option value="">Hizmet Seçiniz</option>';
+
+                // Servisleri ekle
+                if (Array.isArray(services) && services.length > 0) {
+                    services.forEach(service => {
+                        const option = document.createElement('option');
+                        option.value = service.id;
+                        option.textContent = `${service.name} (${service.duration} dk)`;
+                        serviceSelect.appendChild(option);
+                    });
+                    console.log('Servis seçenekleri eklendi:', services.length);
+                } else {
+                    console.log('Eklenecek servis bulunamadı');
+                }
+            } catch (error) {
+                console.error('Servis seçenekleri doldurma hatası:', error);
+            }
+        }
+
+        // Saat seçeneklerini doldur
+        async function populateTimeOptions() {
+            try {
+                console.log('Saat seçenekleri dolduruluyor');
+                const appointmentTimeSelect = document.getElementById('appointmentTime');
+                if (!appointmentTimeSelect) {
+                    console.error('appointmentTimeSelect elementi bulunamadı');
+                    return;
+                }
+
+                // Select'i temizle
+                appointmentTimeSelect.innerHTML = '<option value="">Saat Seçiniz</option>';
+
+                // Saat seçeneklerini ekle
+                const startHour = 8;
+                const endHour = 24;
+
+                for (let hour = startHour; hour < endHour; hour++) {
+                    for (let minute of ['00', '30']) {
+                        const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                        const option = document.createElement('option');
+                        option.value = timeValue;
+                        option.textContent = timeValue;
+                        appointmentTimeSelect.appendChild(option);
+                    }
+                }
+                console.log('Saat seçenekleri eklendi');
+            } catch (error) {
+                console.error('Saat seçenekleri doldurma hatası:', error);
+            }
         }
 
         // Randevuları görüntüle
         function displayAppointments() {
-            console.log('Randevular görüntüleniyor');
-            const appointmentList = document.getElementById('appointmentList');
-            if (!appointmentList) return;
+            try {
+                console.log('Randevular görüntüleniyor');
+                const appointmentList = document.getElementById('appointmentList');
+                if (!appointmentList) {
+                    console.error('appointmentList elementi bulunamadı');
+                    return;
+                }
 
-            appointmentList.innerHTML = '';
-            
-            if (!Array.isArray(appointments)) {
-                appointments = Object.values(appointments || {});
-            }
+                // Listeyi temizle
+                appointmentList.innerHTML = '';
 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const upcomingAppointments = appointments
-                .filter(appointment => {
-                    const appointmentDate = new Date(appointment.date);
-                    appointmentDate.setHours(0, 0, 0, 0);
-                    return appointmentDate.getTime() >= today.getTime() && appointment.status !== 'cancelled';
-                })
-                .sort((a, b) => {
-                    const dateA = new Date(`${a.date}T${a.time}`);
-                    const dateB = new Date(`${b.date}T${b.time}`);
-                    return dateA - dateB;
-                });
+                // Randevuları filtrele ve sırala
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
 
-            if (upcomingAppointments.length === 0) {
-                appointmentList.innerHTML = '<p class="text-gray-500 text-center">Yaklaşan randevu bulunmuyor.</p>';
-                return;
-            }
+                const upcomingAppointments = appointments
+                    .filter(appointment => {
+                        const appointmentDate = new Date(appointment.date);
+                        appointmentDate.setHours(0, 0, 0, 0);
+                        return appointmentDate.getTime() >= today.getTime() && appointment.status !== 'cancelled';
+                    })
+                    .sort((a, b) => {
+                        const dateA = new Date(`${a.date}T${a.time}`);
+                        const dateB = new Date(`${b.date}T${b.time}`);
+                        return dateA - dateB;
+                    });
 
-            upcomingAppointments.forEach(appointment => {
-                const card = document.createElement('div');
-                card.className = 'bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200';
-                
-                const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
-                const formattedDate = appointmentDate.toLocaleDateString('tr-TR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="font-bold text-lg">${appointment.customerName}</h3>
-                            <p class="text-gray-600">${appointment.serviceName}</p>
-                            <p class="text-gray-600">${formattedDate} - ${appointment.time}</p>
-                            ${appointment.notes ? `<p class="text-gray-500 mt-2">${appointment.notes}</p>` : ''}
+                if (upcomingAppointments.length === 0) {
+                    appointmentList.innerHTML = '<p class="text-gray-500 text-center">Yaklaşan randevu bulunmuyor.</p>';
+                    return;
+                }
+
+                // Randevuları listele
+                upcomingAppointments.forEach(appointment => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200';
+                    
+                    const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
+                    const formattedDate = appointmentDate.toLocaleDateString('tr-TR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg">${appointment.customerName}</h3>
+                                <p class="text-gray-600">${appointment.serviceName}</p>
+                                <p class="text-gray-600">${formattedDate} - ${appointment.time}</p>
+                                ${appointment.notes ? `<p class="text-gray-500 mt-2">${appointment.notes}</p>` : ''}
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="editAppointment('${appointment.id}')" class="text-royal-blue hover:text-blue-800">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="cancelAppointment('${appointment.id}')" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex space-x-2">
-                            <button onclick="editAppointment('${appointment.id}')" class="text-royal-blue hover:text-blue-800">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="cancelAppointment('${appointment.id}')" class="text-red-600 hover:text-red-800">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                appointmentList.appendChild(card);
-            });
+                    `;
+                    
+                    appointmentList.appendChild(card);
+                });
+                console.log('Randevular görüntülendi:', upcomingAppointments.length);
+            } catch (error) {
+                console.error('Randevuları görüntüleme hatası:', error);
+            }
         }
         
         // Randevu iptal etme
@@ -1029,46 +1101,6 @@
             auth.signOut();
         });
 
-        // Servis seçeneklerini doldur
-        function populateServiceOptions() {
-            console.log('Servis seçenekleri dolduruluyor');
-            const serviceSelect = document.getElementById('serviceSelect');
-            if (!serviceSelect) return;
-
-            serviceSelect.innerHTML = '<option value="">Hizmet Seçiniz</option>';
-            
-            if (Array.isArray(services)) {
-                services.forEach(service => {
-                    const option = document.createElement('option');
-                    option.value = service.id;
-                    option.textContent = `${service.name} (${service.duration} dk)`;
-                    serviceSelect.appendChild(option);
-                });
-            }
-        }
-        
-        // Saat seçeneklerini doldur
-        function populateTimeOptions() {
-            console.log('Saat seçenekleri dolduruluyor');
-            const appointmentTimeSelect = document.getElementById('appointmentTime');
-            if (!appointmentTimeSelect) return;
-
-            appointmentTimeSelect.innerHTML = '<option value="">Saat Seçiniz</option>';
-            
-            const startHour = 8; // 08:00
-            const endHour = 24; // 24:00 (gece yarısı)
-            
-            for (let hour = startHour; hour < endHour; hour++) {
-                for (let minute of ['00', '30']) {
-                    const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
-                    const option = document.createElement('option');
-                    option.value = timeValue;
-                    option.textContent = timeValue;
-                    appointmentTimeSelect.appendChild(option);
-                }
-            }
-        }
-
         // Hizmetleri görüntüle
         function displayServices() {
             const servicesList = document.getElementById('servicesList');
@@ -1403,14 +1435,6 @@
             // Müşteri arama
             document.getElementById('customerSearch').addEventListener('input', handleCustomerSearch);
         }
-
-        // Sayfa yüklendiğinde
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Sayfa yüklendi');
-            initializeApp();
-            setupEventListeners();
-            loadFromFirebase();
-        });
     </script>
 </body>
 </html>
