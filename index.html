@@ -811,6 +811,12 @@
                 try {
                     await database.ref(`appointments/${appointmentId}/status`).set('cancelled');
                     
+                    // Yerel appointments dizisini güncelle
+                    const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+                    if (appointmentIndex !== -1) {
+                        appointments[appointmentIndex].status = 'cancelled';
+                    }
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Başarılı!',
@@ -967,8 +973,8 @@
                             <input type="tel" id="editCustomerPhone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${appointment.customerPhone}" required>
                         </div>
                         <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700">E-posta</label>
-                            <input type="email" id="editCustomerEmail" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${appointment.customerEmail || ''}">
+                            <label class="block text-sm font-medium text-gray-700">Adres</label>
+                            <textarea id="editCustomerAddress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>${appointment.customerAddress || ''}</textarea>
                         </div>
                         <div class="mb-3">
                             <label class="block text-sm font-medium text-gray-700">Tarih</label>
@@ -1004,7 +1010,7 @@
                     return {
                         customerName: document.getElementById('editCustomerName').value,
                         customerPhone: document.getElementById('editCustomerPhone').value,
-                        customerEmail: document.getElementById('editCustomerEmail').value,
+                        customerAddress: document.getElementById('editCustomerAddress').value,
                         date: document.getElementById('editAppointmentDate').value,
                         time: document.getElementById('editAppointmentTime').value,
                         serviceId: document.getElementById('editServiceSelect').value,
@@ -1029,6 +1035,12 @@
 
                         await database.ref(`appointments/${appointmentId}`).update(updatedAppointment);
 
+                        // Yerel appointments dizisini güncelle
+                        const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+                        if (appointmentIndex !== -1) {
+                            appointments[appointmentIndex] = updatedAppointment;
+                        }
+
                         // Müşteri bilgilerini güncelle
                         await updateCustomer(updatedAppointment);
 
@@ -1038,7 +1050,7 @@
                             text: 'Randevu başarıyla güncellendi.'
                         });
 
-                        // Randevu listesini ve takvimi güncelle
+                        // Randevu listesini güncelle
                         displayAppointments();
                     } catch (error) {
                         console.error('Randevu güncelleme hatası:', error);
