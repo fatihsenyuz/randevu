@@ -418,43 +418,106 @@ if (plusBtn) {
 }
 function showAddAppointmentModal() {
     Swal.fire({
-        title: 'Yeni Randevu',
+        title: '<span style="font-size:1.5rem;font-weight:600;color:#444">Yeni Randevu</span>',
         html: `
-            <input id="swalCustomerName" class="swal2-input" placeholder="Müşteri Adı">
-            <input id="swalDate" type="date" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
-            <input id="swalTime" type="time" class="swal2-input" value="08:00">
-            <select id="swalService" class="swal2-input">${services.map(s => `<option value="${s.id}">${s.name}</option>`)}</select>
-            <select id="swalStaff" class="swal2-input">${staff.map(s => `<option value="${s.id}">${s.name}</option>`)}</select>
+            <div style="text-align:left;">
+                <label style="font-weight:600; color:#444; margin-bottom:2px; display:block;">Müşteri
+                    <button id='newCustomerBtn' type='button' style='float:right; font-size:0.9em; background:#f5f5f5; border:1px solid #ddd; border-radius:6px; padding:2px 10px; color:#444; font-weight:500;'>YENİ MÜŞTERİ</button>
+                </label>
+                <select id="swalCustomer" class="swal2-input" style="width:100%;margin-bottom:10px;"><option value="">Seç</option></select>
+                <label style="font-weight:600; color:#444; margin-bottom:2px; display:block;">Hizmet</label>
+                <select id="swalService" class="swal2-input" style="width:100%;margin-bottom:10px;"><option value="">Seç</option>${services.map(s => `<option value="${s.id}">${s.name}</option>`)}</select>
+                <label style="font-weight:600; color:#444; margin-bottom:2px; display:block;">Randevu Tarihi</label>
+                <input id="swalDate" type="date" class="swal2-input" style="width:100%;margin-bottom:10px;" value="${new Date().toISOString().split('T')[0]}">
+                <label style="font-weight:600; color:#444; margin-bottom:2px; display:block;">Randevu Saati</label>
+                <select id="swalTime" class="swal2-input" style="width:100%;margin-bottom:10px;"><option value="">Seç</option>${generateTimeOptions()}</select>
+                <label style="font-weight:600; color:#444; margin-bottom:2px; display:block;">Adres</label>
+                <textarea id="swalAddress" class="swal2-textarea" style="width:100%;margin-bottom:10px;" placeholder="Adres"></textarea>
+            </div>
         `,
         showCancelButton: true,
-        confirmButtonText: 'Kaydet',
-        cancelButtonText: 'İptal',
-        preConfirm: async () => {
-            const customerName = document.getElementById('swalCustomerName').value;
-            const date = document.getElementById('swalDate').value;
-            const time = document.getElementById('swalTime').value;
-            const serviceId = document.getElementById('swalService').value;
-            const staffId = document.getElementById('swalStaff').value;
-            if (!customerName || !date || !time || !serviceId || !staffId) {
-                Swal.showValidationMessage('Tüm alanları doldurun');
-                return false;
+        showConfirmButton: false,
+        cancelButtonText: 'Kapat',
+        didOpen: () => {
+            // Müşteri select doldur (örnek: customers dizisi varsa)
+            const customerSelect = document.getElementById('swalCustomer');
+            if (window.customers && Array.isArray(window.customers)) {
+                window.customers.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    customerSelect.appendChild(opt);
+                });
             }
-            // Bitiş saati hesapla (servis süresi varsa)
-            const service = services.find(s => s.id === serviceId);
-            let serviceEndTime = '';
-            if (service && service.duration) {
-                const [h, m] = time.split(':');
-                const start = new Date(date);
-                start.setHours(parseInt(h), parseInt(m));
-                const end = new Date(start.getTime() + service.duration * 60000);
-                serviceEndTime = end.toTimeString().slice(0,5);
-            }
-            // Firebase'e kaydet
-            const newApp = { customerName, date, time, serviceId, staffId, serviceEndTime, status: 'pending', createdAt: new Date().toISOString() };
-            await database.ref('appointments').push(newApp);
-            await loadData();
+            // Yeni müşteri butonu
+            document.getElementById('newCustomerBtn').onclick = () => {
+                Swal.fire({
+                    title: 'Yeni Müşteri',
+                    html: `<input id='newCustomerName' class='swal2-input' placeholder='Müşteri Adı'>`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ekle',
+                    cancelButtonText: 'İptal',
+                    preConfirm: async () => {
+                        const name = document.getElementById('newCustomerName').value;
+                        if (!name) { Swal.showValidationMessage('İsim girin'); return false; }
+                        const ref = await database.ref('customers').push({ name });
+                        if (!window.customers) window.customers = [];
+                        window.customers.push({ id: ref.key, name });
+                        showAddAppointmentModal();
+                    }
+                });
+            };
+            // Randevuyu Oluştur butonu
+            const footer = Swal.getActions();
+            const createBtn = document.createElement('button');
+            createBtn.textContent = 'Randevuyu Oluştur';
+            createBtn.style.background = '#38b6ff';
+            createBtn.style.color = 'white';
+            createBtn.style.fontWeight = '600';
+            createBtn.style.fontSize = '1.1em';
+            createBtn.style.width = '100%';
+            createBtn.style.border = 'none';
+            createBtn.style.borderRadius = '8px';
+            createBtn.style.padding = '12px 0';
+            createBtn.style.marginTop = '10px';
+            createBtn.onclick = async () => {
+                const customerId = document.getElementById('swalCustomer').value;
+                const customerName = window.customers ? (window.customers.find(c => c.id === customerId)?.name || '') : '';
+                const serviceId = document.getElementById('swalService').value;
+                const date = document.getElementById('swalDate').value;
+                const time = document.getElementById('swalTime').value;
+                const address = document.getElementById('swalAddress').value;
+                if (!customerId || !serviceId || !date || !time) {
+                    Swal.showValidationMessage('Tüm alanları doldurun');
+                    return;
+                }
+                // Bitiş saati hesapla
+                const service = services.find(s => s.id === serviceId);
+                let serviceEndTime = '';
+                if (service && service.duration) {
+                    const [h, m] = time.split(':');
+                    const start = new Date(date);
+                    start.setHours(parseInt(h), parseInt(m));
+                    const end = new Date(start.getTime() + service.duration * 60000);
+                    serviceEndTime = end.toTimeString().slice(0,5);
+                }
+                // Firebase'e kaydet
+                const newApp = { customerId, customerName, serviceId, date, time, address, serviceEndTime, status: 'pending', createdAt: new Date().toISOString() };
+                await database.ref('appointments').push(newApp);
+                await loadData();
+                Swal.close();
+            };
+            footer.appendChild(createBtn);
         }
     });
+}
+function generateTimeOptions() {
+    let html = '';
+    for (let h = 8; h < 21; h++) {
+        html += `<option value="${h.toString().padStart(2,'0')}:00">${h.toString().padStart(2,'0')}:00</option>`;
+        html += `<option value="${h.toString().padStart(2,'0')}:30">${h.toString().padStart(2,'0')}:30</option>`;
+    }
+    return html;
 }
 // Randevu kartı menüsü (düzenle/sil)
 function showAppointmentMenu(id) {
