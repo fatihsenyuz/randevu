@@ -160,29 +160,21 @@
                     </form>
                 </div>
 
-                <!-- Middle and Right Columns: Calendar and Active Appointments -->
-                <div class="lg:col-span-2 space-y-6">
-                    <!-- Calendar View -->
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <div id="calendar" class="calendar-container"></div>
+                <!-- Right Column: Active Appointments -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-royal-blue">Aktif Randevular</h2>
+                        <div class="flex space-x-2">
+                            <button id="filterBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-1 px-3 rounded text-sm">
+                                <i class="fas fa-filter mr-1"></i>Filtrele
+                            </button>
+                            <button id="exportBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-1 px-3 rounded text-sm">
+                                <i class="fas fa-download mr-1"></i>Dışa Aktar
+                            </button>
+                        </div>
                     </div>
-
-                    <!-- Active Appointments -->
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-bold text-royal-blue">Aktif Randevular</h2>
-                            <div class="flex space-x-2">
-                                <button id="filterBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-1 px-3 rounded text-sm">
-                                    <i class="fas fa-filter mr-1"></i>Filtrele
-                                </button>
-                                <button id="exportBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-1 px-3 rounded text-sm">
-                                    <i class="fas fa-download mr-1"></i>Dışa Aktar
-                                </button>
-                            </div>
-                        </div>
-                        <div id="appointmentList" class="space-y-4">
-                            <!-- Randevular burada listelenecek -->
-                        </div>
+                    <div id="appointmentList" class="space-y-4">
+                        <!-- Randevular burada listelenecek -->
                     </div>
                 </div>
             </div>
@@ -391,60 +383,7 @@
         const reportsSection = document.getElementById('reportsSection');
         const settingsSection = document.getElementById('settingsSection');
         
-        // Takvim başlatma
-        let calendar;
-        function initializeCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                },
-                locale: 'tr',
-                events: [],
-                eventClick: function(info) {
-                    showAppointmentDetails(info.event);
-                }
-            });
-            calendar.render();
-        }
-
-        // Takvimi güncelle
-        function updateCalendar() {
-            if (!calendar) return;
-            
-            const events = [];
-            if (Array.isArray(appointments)) {
-                appointments.forEach(appointment => {
-                    if (appointment.status !== 'cancelled') {
-                        const endTime = calculateEndTime(appointment.date, appointment.time, appointment.serviceDuration);
-                        if (endTime) {
-                            events.push({
-                                title: `${appointment.customerName} - ${appointment.serviceName}`,
-                                start: `${appointment.date}T${appointment.time}`,
-                                end: endTime
-                            });
-                        }
-                    }
-                });
-            }
-            
-            calendar.removeAllEvents();
-            calendar.addEventSource(events);
-        }
-
-        // Sayfa yüklendiğinde
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Sayfa yüklendi');
-            initializeApp();
-            setupEventListeners();
-            loadFromFirebase();
-            initializeCalendar();
-        });
-        
-        // Uygulama başlatma
+        // Takvim başlatma ve güncelleme fonksiyonlarını kaldır
         function initializeApp() {
             console.log('Uygulama başlatılıyor');
             // Tarihi bugün olarak ayarla
@@ -463,158 +402,7 @@
                 document.body.classList.add('dark-mode');
             }
         }
-        
-        // Event listener'ları ayarla
-        function setupEventListeners() {
-            console.log('Event listener\'lar ayarlanıyor');
-            
-            // Tab değiştirme
-            appointmentsTab.addEventListener('click', () => showSection('appointments'));
-            customersTab.addEventListener('click', () => showSection('customers'));
-            servicesTab.addEventListener('click', () => showSection('services'));
-            reportsTab.addEventListener('click', () => showSection('reports'));
-            settingsTab.addEventListener('click', () => showSection('settings'));
-            
-            // Karanlık mod toggle
-            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
-            
-            // Kullanıcı menüsü
-            document.getElementById('userMenuBtn').addEventListener('click', toggleUserMenu);
-            
-            // Form submit
-            appointmentForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                console.log('Form gönderildi');
-                
-                try {
-                    // Form verilerini al
-                    const formData = {
-                        customerName: document.getElementById('customerName').value,
-                        customerPhone: document.getElementById('customerPhone').value,
-                        customerEmail: document.getElementById('customerEmail').value,
-                        customerAddress: document.getElementById('customerAddress').value,
-                        date: document.getElementById('appointmentDate').value,
-                        time: document.getElementById('appointmentTime').value,
-                        serviceId: document.getElementById('serviceSelect').value,
-                        repeat: document.getElementById('repeatAppointment').value,
-                        notes: document.getElementById('appointmentNotes').value
-                    };
 
-                    console.log('Form verileri:', formData);
-
-                    // Validasyon
-                    if (!formData.customerName || !formData.customerPhone || !formData.date || !formData.time || !formData.serviceId) {
-                        throw new Error('Lütfen tüm zorunlu alanları doldurun.');
-                    }
-
-                    // Seçilen hizmeti bul
-                    const selectedService = services.find(s => s.id === formData.serviceId);
-                    console.log('Seçilen hizmet:', selectedService);
-
-                    if (!selectedService) {
-                        throw new Error('Lütfen geçerli bir hizmet seçin.');
-                    }
-
-                    // Randevu nesnesini oluştur
-                    const appointment = {
-                        ...formData,
-                        serviceName: selectedService.name,
-                        serviceDuration: selectedService.duration,
-                        status: 'pending',
-                        createdAt: new Date().toISOString()
-                    };
-
-                    console.log('Oluşturulan randevu:', appointment);
-
-                    // Firebase'e kaydet
-                    const appointmentRef = await database.ref('appointments').push(appointment);
-                    console.log('Randevu kaydedildi:', appointmentRef.key);
-
-                    // Müşteriyi kaydet/güncelle
-                    await updateCustomer(appointment);
-
-                    // Formu temizle
-                    appointmentForm.reset();
-                    appointmentDateInput.value = new Date().toISOString().split('T')[0];
-
-                    // Başarı mesajı göster
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Başarılı!',
-                        text: 'Randevu başarıyla oluşturuldu.'
-                    });
-
-                    // Randevu listesini güncelle
-                    displayAppointments();
-                    updateCalendar();
-
-                } catch (error) {
-                    console.error('Randevu oluşturma hatası:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Hata!',
-                        text: error.message || 'Randevu oluşturulurken bir hata oluştu.'
-                    });
-                }
-            });
-            
-            // Müşteri arama
-            document.getElementById('customerSearch').addEventListener('input', handleCustomerSearch);
-        }
-        
-        // Section gösterme
-        function showSection(section) {
-            // Tüm section'ları gizle
-            appointmentsSection.classList.add('hidden');
-            customersSection.classList.add('hidden');
-            servicesSection.classList.add('hidden');
-            reportsSection.classList.add('hidden');
-            settingsSection.classList.add('hidden');
-            
-            // Tüm tab'ları normal yap
-            appointmentsTab.classList.remove('bg-royal-blue', 'text-white');
-            customersTab.classList.remove('bg-royal-blue', 'text-white');
-            servicesTab.classList.remove('bg-royal-blue', 'text-white');
-            reportsTab.classList.remove('bg-royal-blue', 'text-white');
-            settingsTab.classList.remove('bg-royal-blue', 'text-white');
-            
-            // Seçilen section'ı göster
-            switch(section) {
-                case 'appointments':
-                    appointmentsSection.classList.remove('hidden');
-                    appointmentsTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'customers':
-                    customersSection.classList.remove('hidden');
-                    customersTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'services':
-                    servicesSection.classList.remove('hidden');
-                    servicesTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'reports':
-                    reportsSection.classList.remove('hidden');
-                    reportsTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'settings':
-                    settingsSection.classList.remove('hidden');
-                    settingsTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-            }
-        }
-        
-        // Karanlık mod toggle
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        }
-        
-        // Kullanıcı menüsü toggle
-        function toggleUserMenu() {
-            const userMenu = document.getElementById('userMenu');
-            userMenu.classList.toggle('hidden');
-        }
-        
         // Firebase'den veri yükleme
         function loadFromFirebase() {
             console.log('Firebase\'den veri yükleniyor');
@@ -650,9 +438,8 @@
                 }
                 console.log('Randevular yüklendi:', appointments);
                 displayAppointments();
-                updateCalendar();
             });
-
+            
             // Müşterileri yükle
             database.ref('customers').on('value', (snapshot) => {
                 const customersData = snapshot.val();
@@ -675,7 +462,7 @@
                 updateSettingsUI();
             });
         }
-        
+
         // Randevuları görüntüle
         function displayAppointments() {
             console.log('Randevular görüntüleniyor');
@@ -710,7 +497,7 @@
 
             upcomingAppointments.forEach(appointment => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-4 rounded-lg shadow-md mb-4';
+                card.className = 'bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200';
                 
                 const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
                 const formattedDate = appointmentDate.toLocaleDateString('tr-TR', {
@@ -766,7 +553,6 @@
                     
                     // Randevu listesini güncelle
                     displayAppointments();
-                    updateCalendar();
                 } catch (error) {
                     Swal.fire({
                         icon: 'error',
@@ -988,7 +774,6 @@
 
                         // Randevu listesini ve takvimi güncelle
                         displayAppointments();
-                        updateCalendar();
                     } catch (error) {
                         console.error('Randevu güncelleme hatası:', error);
                         Swal.fire({
