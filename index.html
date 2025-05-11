@@ -391,12 +391,54 @@
         const reportsSection = document.getElementById('reportsSection');
         const settingsSection = document.getElementById('settingsSection');
         
+        // Takvim başlatma
+        let calendar;
+        function initializeCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                locale: 'tr',
+                events: [],
+                eventClick: function(info) {
+                    showAppointmentDetails(info.event);
+                }
+            });
+            calendar.render();
+        }
+
+        // Takvimi güncelle
+        function updateCalendar() {
+            if (!calendar) return;
+            
+            const events = [];
+            if (Array.isArray(appointments)) {
+                appointments.forEach(appointment => {
+                    if (appointment.status !== 'cancelled') {
+                        events.push({
+                            title: `${appointment.customerName} - ${appointment.serviceName}`,
+                            start: `${appointment.date}T${appointment.time}`,
+                            end: calculateEndTime(appointment.date, appointment.time, appointment.serviceDuration)
+                        });
+                    }
+                });
+            }
+            
+            calendar.removeAllEvents();
+            calendar.addEventSource(events);
+        }
+
         // Sayfa yüklendiğinde
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Sayfa yüklendi');
             initializeApp();
             setupEventListeners();
             loadFromFirebase();
+            initializeCalendar();
         });
         
         // Uygulama başlatma
@@ -455,6 +497,8 @@
                         notes: document.getElementById('appointmentNotes').value
                     };
 
+                    console.log('Form verileri:', formData);
+
                     // Validasyon
                     if (!formData.customerName || !formData.customerPhone || !formData.date || !formData.time || !formData.serviceId) {
                         throw new Error('Lütfen tüm zorunlu alanları doldurun.');
@@ -462,6 +506,8 @@
 
                     // Seçilen hizmeti bul
                     const selectedService = services.find(s => s.id === formData.serviceId);
+                    console.log('Seçilen hizmet:', selectedService);
+
                     if (!selectedService) {
                         throw new Error('Lütfen geçerli bir hizmet seçin.');
                     }
@@ -474,6 +520,8 @@
                         status: 'pending',
                         createdAt: new Date().toISOString()
                     };
+
+                    console.log('Oluşturulan randevu:', appointment);
 
                     // Firebase'e kaydet
                     const appointmentRef = await database.ref('appointments').push(appointment);
@@ -570,7 +618,16 @@
             
             // Servisleri yükle
             database.ref('services').on('value', (snapshot) => {
-                services = snapshot.val() || [];
+                const servicesData = snapshot.val();
+                services = [];
+                if (servicesData) {
+                    Object.keys(servicesData).forEach(key => {
+                        services.push({
+                            ...servicesData[key],
+                            id: key // Firebase key'ini ID olarak kullan
+                        });
+                    });
+                }
                 console.log('Servisler yüklendi:', services);
                 populateServiceOptions();
                 displayServices();
@@ -578,7 +635,16 @@
             
             // Randevuları yükle
             database.ref('appointments').on('value', (snapshot) => {
-                appointments = snapshot.val() || [];
+                const appointmentsData = snapshot.val();
+                appointments = [];
+                if (appointmentsData) {
+                    Object.keys(appointmentsData).forEach(key => {
+                        appointments.push({
+                            ...appointmentsData[key],
+                            id: key // Firebase key'ini ID olarak kullan
+                        });
+                    });
+                }
                 console.log('Randevular yüklendi:', appointments);
                 displayAppointments();
                 updateCalendar();
@@ -594,74 +660,6 @@
             database.ref('settings').on('value', (snapshot) => {
                 settings = snapshot.val() || settings;
                 updateSettingsUI();
-            });
-        }
-        
-        // Takvim başlatma
-        function initializeCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                },
-                locale: 'tr',
-                events: appointments.map(appointment => ({
-                    title: `${appointment.customerName} - ${appointment.serviceName}`,
-                    start: `${appointment.date}T${appointment.time}`,
-                    end: calculateEndTime(appointment.date, appointment.time, appointment.serviceDuration)
-                })),
-                eventClick: function(info) {
-                    showAppointmentDetails(info.event);
-                }
-            });
-            calendar.render();
-        }
-        
-        // Grafikleri başlatma
-        function initializeCharts() {
-            // Gelir grafiği
-            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-            new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: getLast7Days(),
-                    datasets: [{
-                        label: 'Günlük Gelir',
-                        data: calculateDailyRevenue(),
-                        borderColor: '#1e3a8a',
-                        tension: 0.1
-                    }]
-                }
-            });
-            
-            // Randevu grafiği
-            const appointmentCtx = document.getElementById('appointmentChart').getContext('2d');
-            new Chart(appointmentCtx, {
-                type: 'bar',
-                data: {
-                    labels: getServiceNames(),
-                    datasets: [{
-                        label: 'Randevu Sayısı',
-                        data: calculateServiceAppointments(),
-                        backgroundColor: '#1e3a8a'
-                    }]
-                }
-            });
-            
-            // Müşteri grafiği
-            const customerCtx = document.getElementById('customerChart').getContext('2d');
-            new Chart(customerCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Yeni', 'Tekrar Eden', 'Sadık'],
-                    datasets: [{
-                        data: calculateCustomerStats(),
-                        backgroundColor: ['#1e3a8a', '#2563eb', '#3b82f6']
-                    }]
-                }
             });
         }
         
@@ -1096,7 +1094,7 @@
             if (Array.isArray(services)) {
                 services.forEach(service => {
                     const option = document.createElement('option');
-                    option.value = service.id;
+                    option.value = service.id || service.key; // Firebase'den gelen ID'yi kullan
                     option.textContent = `${service.name} (${service.duration} dk)`;
                     serviceSelect.appendChild(option);
                 });
