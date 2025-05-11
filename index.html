@@ -262,22 +262,108 @@
             <button class="text-gray-400 text-2xl"><i class="fas fa-ellipsis-h"></i></button>
         </nav>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.17.2/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.17.2/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script>
-// ... only keep the new dynamic appointment JS and remove all old/legacy JS ...
-// Yeni: Randevuları günlere göre gruplayıp yeni tasarımla göster
+// Firebase yapılandırma
+const firebaseConfig = {
+    apiKey: "AIzaSyCkDVD0MIZUy4tdLrWJDONYWlt0kXA2xuU",
+    authDomain: "royal-6ff68.firebaseapp.com",
+    databaseURL: "https://royal-6ff68-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "royal-6ff68",
+    storageBucket: "royal-6ff68.appspot.com",
+    messagingSenderId: "1056928171234",
+    appId: "1:1056928171234:web:abcd1234efgh5678ijkl90"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
 let appointments = [];
+let services = [];
+let staff = [];
+let selectedStaff = 'all';
+let selectedService = 'all';
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+// Randevuları, personelleri ve hizmetleri yükle
+async function loadData() {
+    // Hizmetler
+    const servicesSnap = await database.ref('services').once('value');
+    services = [];
+    if (servicesSnap.val()) {
+        Object.entries(servicesSnap.val()).forEach(([id, s]) => {
+            services.push({ id, ...s });
+        });
+    }
+    // Personeller
+    const staffSnap = await database.ref('staff').once('value');
+    staff = [];
+    if (staffSnap.val()) {
+        Object.entries(staffSnap.val()).forEach(([id, s]) => {
+            staff.push({ id, ...s });
+        });
+    }
+    // Randevular
+    const appsSnap = await database.ref('appointments').once('value');
+    appointments = [];
+    if (appsSnap.val()) {
+        Object.entries(appsSnap.val()).forEach(([id, a]) => {
+            appointments.push({ id, ...a });
+        });
+    }
+    renderFilters();
+    displayAppointmentsByDay();
+}
+
+// Filtreleri doldur
+function renderFilters() {
+    // Personel
+    const staffSelect = document.querySelector('select:nth-of-type(1)');
+    staffSelect.innerHTML = '<option value="all">Tüm Personel</option>' + staff.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    staffSelect.value = selectedStaff;
+    staffSelect.onchange = e => { selectedStaff = e.target.value; displayAppointmentsByDay(); };
+    // Hizmet
+    const serviceSelect = document.querySelector('select:nth-of-type(2)');
+    serviceSelect.innerHTML = '<option value="all">Tüm Hizmetler</option>' + services.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    serviceSelect.value = selectedService;
+    serviceSelect.onchange = e => { selectedService = e.target.value; displayAppointmentsByDay(); };
+}
+
+// Ay geçişi
+function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    displayAppointmentsByDay();
+}
+document.querySelectorAll('button').forEach(btn => {
+    if (btn.textContent.includes('Önceki Ay')) btn.onclick = () => changeMonth(-1);
+    if (btn.textContent.includes('Sonraki Ay')) btn.onclick = () => changeMonth(1);
+});
+
+// Randevuları günlere göre gruplayıp yeni tasarımla göster
 function displayAppointmentsByDay() {
     const container = document.getElementById('appointmentDaysList');
     if (!container) return;
     container.innerHTML = '';
-    if (!appointments || appointments.length === 0) {
+    // Filtrele ve ayı uygula
+    const filtered = appointments.filter(app => {
+        const appDate = new Date(app.date);
+        if (app.status === 'cancelled') return false;
+        if (appDate.getMonth() !== currentMonth || appDate.getFullYear() !== currentYear) return false;
+        if (selectedStaff !== 'all' && app.staffId !== selectedStaff) return false;
+        if (selectedService !== 'all' && app.serviceId !== selectedService) return false;
+        return true;
+    });
+    if (filtered.length === 0) {
         container.innerHTML = '<p class="text-gray-500 text-center mt-8">Yaklaşan randevu bulunmuyor.</p>';
         return;
     }
     // Randevuları tarihe göre grupla
     const grouped = {};
-    appointments.forEach(app => {
-        if (app.status === 'cancelled') return;
+    filtered.forEach(app => {
         if (!grouped[app.date]) grouped[app.date] = [];
         grouped[app.date].push(app);
     });
@@ -302,12 +388,12 @@ function displayAppointmentsByDay() {
                 <div class="w-1.5 h-12 rounded bg-pink-300 mr-3"></div>
                 <div class="flex-1">
                     <div class="font-semibold text-gray-700">${app.customerName}</div>
-                    <div class="text-gray-500 text-base">${app.serviceName}</div>
+                    <div class="text-gray-500 text-base">${getServiceName(app.serviceId)}</div>
                 </div>
                 <div class="flex flex-col items-end ml-2">
                     <span class="text-gray-600 text-base">${app.time}</span>
                     <span class="text-gray-600 text-base">${app.serviceEndTime ? app.serviceEndTime : ''}</span>
-                    <button class="text-gray-400 text-xl mt-1"><i class="fas fa-ellipsis-v"></i></button>
+                    <button class="text-gray-400 text-xl mt-1" onclick="showAppointmentMenu('${app.id}')"><i class="fas fa-ellipsis-v"></i></button>
                 </div>
             `;
             dayDiv.appendChild(card);
@@ -318,15 +404,119 @@ function displayAppointmentsByDay() {
     const nextBtnDiv = document.createElement('div');
     nextBtnDiv.className = 'flex justify-center mb-24';
     nextBtnDiv.innerHTML = '<button class="rounded-lg border border-gray-200 bg-white px-6 py-2 text-gray-600 font-medium">Sonraki Ay</button>';
+    nextBtnDiv.querySelector('button').onclick = () => changeMonth(1);
     container.appendChild(nextBtnDiv);
 }
-// Örnek veri ile başlat (Firebase ile entegre edilecekse burası değiştirilebilir)
-appointments = [
-    {customerName: 'Fatih Şenyüz', serviceName: 'Koltuk Takımı Yıkama', date: '2024-05-11', time: '16:30', serviceEndTime: '18:30'},
-    {customerName: 'Fatma Kayık', serviceName: 'Koltuk Takımı Yıkama', date: '2024-05-12', time: '13:00', serviceEndTime: '15:00'},
-    {customerName: 'Özlem Hanım', serviceName: 'Koltuk Takımı Yıkama', date: '2024-05-17', time: '11:00', serviceEndTime: '13:00'}
-];
-displayAppointmentsByDay();
+function getServiceName(id) {
+    const s = services.find(x => x.id === id);
+    return s ? s.name : '';
+}
+// + Butonu: Randevu ekleme
+const plusBtn = document.querySelector('nav .bg-lime-300');
+if (plusBtn) {
+    plusBtn.onclick = () => showAddAppointmentModal();
+}
+function showAddAppointmentModal() {
+    Swal.fire({
+        title: 'Yeni Randevu',
+        html: `
+            <input id="swalCustomerName" class="swal2-input" placeholder="Müşteri Adı">
+            <input id="swalDate" type="date" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
+            <input id="swalTime" type="time" class="swal2-input" value="08:00">
+            <select id="swalService" class="swal2-input">${services.map(s => `<option value="${s.id}">${s.name}</option>`)}</select>
+            <select id="swalStaff" class="swal2-input">${staff.map(s => `<option value="${s.id}">${s.name}</option>`)}</select>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Kaydet',
+        cancelButtonText: 'İptal',
+        preConfirm: async () => {
+            const customerName = document.getElementById('swalCustomerName').value;
+            const date = document.getElementById('swalDate').value;
+            const time = document.getElementById('swalTime').value;
+            const serviceId = document.getElementById('swalService').value;
+            const staffId = document.getElementById('swalStaff').value;
+            if (!customerName || !date || !time || !serviceId || !staffId) {
+                Swal.showValidationMessage('Tüm alanları doldurun');
+                return false;
+            }
+            // Bitiş saati hesapla (servis süresi varsa)
+            const service = services.find(s => s.id === serviceId);
+            let serviceEndTime = '';
+            if (service && service.duration) {
+                const [h, m] = time.split(':');
+                const start = new Date(date);
+                start.setHours(parseInt(h), parseInt(m));
+                const end = new Date(start.getTime() + service.duration * 60000);
+                serviceEndTime = end.toTimeString().slice(0,5);
+            }
+            // Firebase'e kaydet
+            const newApp = { customerName, date, time, serviceId, staffId, serviceEndTime, status: 'pending', createdAt: new Date().toISOString() };
+            await database.ref('appointments').push(newApp);
+            await loadData();
+        }
+    });
+}
+// Randevu kartı menüsü (düzenle/sil)
+function showAppointmentMenu(id) {
+    Swal.fire({
+        title: 'Randevu İşlemleri',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Düzenle',
+        denyButtonText: 'Sil',
+        cancelButtonText: 'Kapat',
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            editAppointment(id);
+        } else if (result.isDenied) {
+            await database.ref('appointments/' + id).update({ status: 'cancelled' });
+            await loadData();
+        }
+    });
+}
+function editAppointment(id) {
+    const app = appointments.find(a => a.id === id);
+    if (!app) return;
+    Swal.fire({
+        title: 'Randevu Düzenle',
+        html: `
+            <input id="swalCustomerName" class="swal2-input" placeholder="Müşteri Adı" value="${app.customerName}">
+            <input id="swalDate" type="date" class="swal2-input" value="${app.date}">
+            <input id="swalTime" type="time" class="swal2-input" value="${app.time}">
+            <select id="swalService" class="swal2-input">${services.map(s => `<option value="${s.id}" ${s.id===app.serviceId?'selected':''}>${s.name}</option>`)}</select>
+            <select id="swalStaff" class="swal2-input">${staff.map(s => `<option value="${s.id}" ${s.id===app.staffId?'selected':''}>${s.name}</option>`)}</select>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Kaydet',
+        cancelButtonText: 'İptal',
+        preConfirm: async () => {
+            const customerName = document.getElementById('swalCustomerName').value;
+            const date = document.getElementById('swalDate').value;
+            const time = document.getElementById('swalTime').value;
+            const serviceId = document.getElementById('swalService').value;
+            const staffId = document.getElementById('swalStaff').value;
+            if (!customerName || !date || !time || !serviceId || !staffId) {
+                Swal.showValidationMessage('Tüm alanları doldurun');
+                return false;
+            }
+            // Bitiş saati hesapla (servis süresi varsa)
+            const service = services.find(s => s.id === serviceId);
+            let serviceEndTime = '';
+            if (service && service.duration) {
+                const [h, m] = time.split(':');
+                const start = new Date(date);
+                start.setHours(parseInt(h), parseInt(m));
+                const end = new Date(start.getTime() + service.duration * 60000);
+                serviceEndTime = end.toTimeString().slice(0,5);
+            }
+            // Firebase'de güncelle
+            await database.ref('appointments/' + id).update({ customerName, date, time, serviceId, staffId, serviceEndTime });
+            await loadData();
+        }
+    });
+}
+// Sayfa yüklenince verileri çek
+window.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
 </html>
