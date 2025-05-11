@@ -86,6 +86,10 @@
             padding: 0.5rem;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            overflow-x: hidden;
         }
         
         .mobile-menu button {
@@ -93,6 +97,18 @@
             padding: 0.5rem;
             text-align: center;
             color: #666;
+            min-width: 0;
+            white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+        
+        .mobile-menu button i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
         }
         
         .mobile-menu button.active {
@@ -170,6 +186,36 @@
         /* Mobil Butonlar */
         button {
             touch-action: manipulation;
+        }
+
+        /* Ana içerik için alt boşluk */
+        #mainContent {
+            padding-bottom: 4rem;
+        }
+
+        /* Mobil görünüm için ek düzenlemeler */
+        @media (max-width: 768px) {
+            .container {
+                padding-bottom: 4rem;
+            }
+            
+            nav {
+                display: none; /* Üst menüyü gizle */
+            }
+            
+            .mobile-menu {
+                display: flex; /* Alt menüyü göster */
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu {
+                display: none; /* Masaüstünde alt menüyü gizle */
+            }
+            
+            nav {
+                display: flex; /* Masaüstünde üst menüyü göster */
+            }
         }
     </style>
 </head>
@@ -423,6 +469,30 @@
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- Mobil Menü -->
+    <div class="mobile-menu md:hidden">
+        <button onclick="showSection('appointments')" class="active">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Randevular</span>
+        </button>
+        <button onclick="showSection('customers')">
+            <i class="fas fa-users"></i>
+            <span>Müşteriler</span>
+        </button>
+        <button onclick="showSection('services')">
+            <i class="fas fa-concierge-bell"></i>
+            <span>Hizmetler</span>
+        </button>
+        <button onclick="showSection('reports')">
+            <i class="fas fa-chart-bar"></i>
+            <span>Raporlar</span>
+        </button>
+        <button onclick="showSection('settings')">
+            <i class="fas fa-cog"></i>
+            <span>Ayarlar</span>
+        </button>
     </div>
 
     <!-- Scripts -->
@@ -1583,54 +1653,43 @@
             }
         }
 
+        // Mobil Menü Aktif Tab Güncelleme
+        function updateMobileMenu(activeSection) {
+            const buttons = document.querySelectorAll('.mobile-menu button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.onclick.toString().includes(activeSection)) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
         // Section gösterme fonksiyonu
         function showSection(sectionName) {
             // Tüm section'ları gizle
-            appointmentsSection.classList.add('hidden');
-            customersSection.classList.add('hidden');
-            servicesSection.classList.add('hidden');
-            reportsSection.classList.add('hidden');
-            settingsSection.classList.add('hidden');
+            document.querySelectorAll('#mainContent > div').forEach(section => {
+                section.classList.add('hidden');
+            });
             
             // Tüm tab butonlarının stilini sıfırla
-            appointmentsTab.classList.remove('bg-royal-blue', 'text-white');
-            customersTab.classList.remove('bg-royal-blue', 'text-white');
-            servicesTab.classList.remove('bg-royal-blue', 'text-white');
-            reportsTab.classList.remove('bg-royal-blue', 'text-white');
-            settingsTab.classList.remove('bg-royal-blue', 'text-white');
+            document.querySelectorAll('nav button, .mobile-menu button').forEach(button => {
+                button.classList.remove('bg-royal-blue', 'text-white', 'active');
+            });
             
             // Seçilen section'ı göster
-            switch(sectionName) {
-                case 'appointments':
-                    appointmentsSection.classList.remove('hidden');
-                    appointmentsTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'customers':
-                    customersSection.classList.remove('hidden');
-                    customersTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'services':
-                    servicesSection.classList.remove('hidden');
-                    servicesTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'reports':
-                    reportsSection.classList.remove('hidden');
-                    reportsTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
-                case 'settings':
-                    settingsSection.classList.remove('hidden');
-                    settingsTab.classList.add('bg-royal-blue', 'text-white');
-                    break;
+            const selectedSection = document.getElementById(sectionName + 'Section');
+            if (selectedSection) {
+                selectedSection.classList.remove('hidden');
             }
-        }
-
-        // Mobil Menü
-        const mobileMenu = document.querySelector('.mobile-menu');
-        if (mobileMenu) {
-            mobileMenu.addEventListener('click', () => {
-                const activeSection = mobileMenu.querySelector('.active').getAttribute('onclick').match(/\('([^']+)'/)[1];
-                showSection(activeSection);
-            });
+            
+            // Seçilen tab'ı vurgula
+            const selectedTab = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+            if (selectedTab) {
+                selectedTab.classList.add('bg-royal-blue', 'text-white', 'active');
+            }
+            
+            // Mobil menüyü güncelle
+            updateMobileMenu(sectionName);
         }
 
         // PWA Service Worker
@@ -1658,24 +1717,6 @@
                 }
             }
         }
-
-        // Mobil Menü Aktif Tab Güncelleme
-        function updateMobileMenu(activeSection) {
-            const buttons = document.querySelectorAll('.mobile-menu button');
-            buttons.forEach(button => {
-                button.classList.remove('active');
-                if (button.onclick.toString().includes(activeSection)) {
-                    button.classList.add('active');
-                }
-            });
-        }
-
-        // Section gösterme fonksiyonunu güncelle
-        const originalShowSection = showSection;
-        showSection = function(sectionName) {
-            originalShowSection(sectionName);
-            updateMobileMenu(sectionName);
-        };
     </script>
 </body>
 </html>
