@@ -219,17 +219,32 @@
         }
 
         /* SweetAlert2 ve modal için özel modern stil */
+        .swal2-container {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
         .swal2-popup {
             border-radius: 24px !important;
             padding: 2.2rem 1.2rem 1.5rem 1.2rem !important;
             max-width: 95vw;
             width: 380px;
+            margin: auto !important;
+            left: 0; right: 0;
+            box-sizing: border-box;
         }
         .swal2-title {
             font-size: 2rem !important;
             font-weight: 700 !important;
             color: #222 !important;
             margin-bottom: 1.2rem !important;
+            text-align: center !important;
+        }
+        .swal2-html-container {
+            width: 100% !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            box-sizing: border-box;
         }
         .swal2-input, .swal2-select, .swal2-textarea {
             border-radius: 22px !important;
@@ -239,6 +254,11 @@
             padding: 0.9em 1.1em !important;
             margin-bottom: 1.1em !important;
             box-shadow: none !important;
+            width: 100% !important;
+            display: block !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            box-sizing: border-box !important;
         }
         .swal2-input:focus, .swal2-select:focus, .swal2-textarea:focus {
             border-color: #38b6ff !important;
@@ -251,6 +271,9 @@
         .swal2-actions {
             margin-top: 1.5em !important;
             flex-direction: column !important;
+            width: 100% !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
         .swal2-actions button.swal2-cancel {
             background: #6b7280 !important;
@@ -260,6 +283,9 @@
             width: 100%;
             margin-bottom: 0.7em;
             padding: 0.9em 0 !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            display: block !important;
         }
         .swal2-actions button.custom-create-btn {
             background: #38b6ff !important;
@@ -269,15 +295,20 @@
             font-weight: 700 !important;
             width: 100%;
             padding: 1em 0 !important;
-            margin: 0;
+            margin: 0 auto !important;
             box-shadow: none !important;
             border: none !important;
+            display: block !important;
         }
         @media (max-width: 480px) {
             .swal2-popup {
                 width: 98vw !important;
                 min-width: unset !important;
                 padding: 1.2rem 0.3rem 1.2rem 0.3rem !important;
+                left: 0; right: 0;
+            }
+            .swal2-html-container {
+                padding: 0 !important;
             }
         }
     </style>
