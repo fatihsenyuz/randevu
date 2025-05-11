@@ -891,15 +891,140 @@
                     cancelButtonText: 'Kapat'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        editAppointment(appointment);
+                        editAppointment(appointment.id);
                     }
                 });
             }
         }
         
-        function editAppointment(appointment) {
-            // Randevu düzenleme modalını göster
-            // Bu kısım daha sonra eklenecek
+        // Randevu düzenleme
+        function editAppointment(appointmentId) {
+            const appointment = appointments.find(a => a.id === appointmentId);
+            if (!appointment) return;
+
+            Swal.fire({
+                title: 'Randevu Düzenle',
+                html: `
+                    <form id="editAppointmentForm" class="text-left">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Müşteri Adı</label>
+                            <input type="text" id="editCustomerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${appointment.customerName}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Telefon</label>
+                            <input type="tel" id="editCustomerPhone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${appointment.customerPhone}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">E-posta</label>
+                            <input type="email" id="editCustomerEmail" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${appointment.customerEmail || ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Tarih</label>
+                            <input type="date" id="editAppointmentDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${appointment.date}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Saat</label>
+                            <select id="editAppointmentTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                ${generateTimeOptions(appointment.time)}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Hizmet</label>
+                            <select id="editServiceSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                ${generateServiceOptions(appointment.serviceId)}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Notlar</label>
+                            <textarea id="editAppointmentNotes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">${appointment.notes || ''}</textarea>
+                        </div>
+                    </form>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Kaydet',
+                cancelButtonText: 'İptal',
+                preConfirm: () => {
+                    const form = document.getElementById('editAppointmentForm');
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return false;
+                    }
+                    return {
+                        customerName: document.getElementById('editCustomerName').value,
+                        customerPhone: document.getElementById('editCustomerPhone').value,
+                        customerEmail: document.getElementById('editCustomerEmail').value,
+                        date: document.getElementById('editAppointmentDate').value,
+                        time: document.getElementById('editAppointmentTime').value,
+                        serviceId: document.getElementById('editServiceSelect').value,
+                        notes: document.getElementById('editAppointmentNotes').value
+                    };
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const selectedService = services.find(s => s.id === result.value.serviceId);
+                        if (!selectedService) {
+                            throw new Error('Lütfen geçerli bir hizmet seçin.');
+                        }
+
+                        const updatedAppointment = {
+                            ...appointment,
+                            ...result.value,
+                            serviceName: selectedService.name,
+                            serviceDuration: selectedService.duration,
+                            updatedAt: new Date().toISOString()
+                        };
+
+                        await database.ref(`appointments/${appointmentId}`).update(updatedAppointment);
+
+                        // Müşteri bilgilerini güncelle
+                        await updateCustomer(updatedAppointment);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Başarılı!',
+                            text: 'Randevu başarıyla güncellendi.'
+                        });
+
+                        // Randevu listesini ve takvimi güncelle
+                        displayAppointments();
+                        updateCalendar();
+                    } catch (error) {
+                        console.error('Randevu güncelleme hatası:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Hata!',
+                            text: error.message || 'Randevu güncellenirken bir hata oluştu.'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Saat seçeneklerini oluştur
+        function generateTimeOptions(selectedTime) {
+            let options = '<option value="">Saat Seçiniz</option>';
+            const startHour = 8;
+            const endHour = 20;
+
+            for (let hour = startHour; hour < endHour; hour++) {
+                for (let minute of ['00', '30']) {
+                    const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                    const selected = timeValue === selectedTime ? 'selected' : '';
+                    options += `<option value="${timeValue}" ${selected}>${timeValue}</option>`;
+                }
+            }
+            return options;
+        }
+
+        // Hizmet seçeneklerini oluştur
+        function generateServiceOptions(selectedServiceId) {
+            let options = '<option value="">Hizmet Seçiniz</option>';
+            services.forEach(service => {
+                const selected = service.id === selectedServiceId ? 'selected' : '';
+                options += `<option value="${service.id}" ${selected}>${service.name} (${service.duration} dk)</option>`;
+            });
+            return options;
         }
         
         function handleCustomerSearch(e) {
