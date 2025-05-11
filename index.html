@@ -419,11 +419,14 @@
             if (Array.isArray(appointments)) {
                 appointments.forEach(appointment => {
                     if (appointment.status !== 'cancelled') {
-                        events.push({
-                            title: `${appointment.customerName} - ${appointment.serviceName}`,
-                            start: `${appointment.date}T${appointment.time}`,
-                            end: calculateEndTime(appointment.date, appointment.time, appointment.serviceDuration)
-                        });
+                        const endTime = calculateEndTime(appointment.date, appointment.time, appointment.serviceDuration);
+                        if (endTime) {
+                            events.push({
+                                title: `${appointment.customerName} - ${appointment.serviceName}`,
+                                start: `${appointment.date}T${appointment.time}`,
+                                end: endTime
+                            });
+                        }
                     }
                 });
             }
@@ -624,7 +627,7 @@
                     Object.keys(servicesData).forEach(key => {
                         services.push({
                             ...servicesData[key],
-                            id: key // Firebase key'ini ID olarak kullan
+                            id: key
                         });
                     });
                 }
@@ -641,7 +644,7 @@
                     Object.keys(appointmentsData).forEach(key => {
                         appointments.push({
                             ...appointmentsData[key],
-                            id: key // Firebase key'ini ID olarak kullan
+                            id: key
                         });
                     });
                 }
@@ -649,10 +652,20 @@
                 displayAppointments();
                 updateCalendar();
             });
-            
+
             // Müşterileri yükle
             database.ref('customers').on('value', (snapshot) => {
-                customers = snapshot.val() || [];
+                const customersData = snapshot.val();
+                customers = [];
+                if (customersData) {
+                    Object.keys(customersData).forEach(key => {
+                        customers.push({
+                            ...customersData[key],
+                            id: key
+                        });
+                    });
+                }
+                console.log('Müşteriler yüklendi:', customers);
                 displayCustomers();
             });
             
@@ -766,30 +779,36 @@
         
         // Müşteri güncelleme
         async function updateCustomer(appointment) {
-            const customerRef = database.ref('customers').orderByChild('phone').equalTo(appointment.customerPhone);
-            const snapshot = await customerRef.once('value');
-            
-            if (snapshot.exists()) {
-                // Müşteri zaten var, güncelle
-                const customerKey = Object.keys(snapshot.val())[0];
-                const customer = snapshot.val()[customerKey];
+            try {
+                const customerRef = database.ref('customers').orderByChild('phone').equalTo(appointment.customerPhone);
+                const snapshot = await customerRef.once('value');
                 
-                await database.ref(`customers/${customerKey}/lastAppointment`).set(appointment.date);
-                await database.ref(`customers/${customerKey}/appointmentCount`).set((customer.appointmentCount || 0) + 1);
-                await database.ref(`customers/${customerKey}/loyaltyPoints`).set((customer.loyaltyPoints || 0) + 10);
-            } else {
-                // Yeni müşteri oluştur
-                await database.ref('customers').push({
-                    name: appointment.customerName,
-                    phone: appointment.customerPhone,
-                    email: appointment.customerEmail,
-                    address: appointment.customerAddress,
-                    firstAppointment: appointment.date,
-                    lastAppointment: appointment.date,
-                    appointmentCount: 1,
-                    loyaltyPoints: 10,
-                    createdAt: new Date().toISOString()
-                });
+                if (snapshot.exists()) {
+                    // Müşteri zaten var, güncelle
+                    const customerKey = Object.keys(snapshot.val())[0];
+                    const customer = snapshot.val()[customerKey];
+                    
+                    await database.ref(`customers/${customerKey}`).update({
+                        lastAppointment: appointment.date,
+                        appointmentCount: (customer.appointmentCount || 0) + 1,
+                        loyaltyPoints: (customer.loyaltyPoints || 0) + 10
+                    });
+                } else {
+                    // Yeni müşteri oluştur
+                    await database.ref('customers').push({
+                        name: appointment.customerName,
+                        phone: appointment.customerPhone,
+                        email: appointment.customerEmail,
+                        address: appointment.customerAddress,
+                        firstAppointment: appointment.date,
+                        lastAppointment: appointment.date,
+                        appointmentCount: 1,
+                        loyaltyPoints: 10,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            } catch (error) {
+                console.error('Müşteri güncelleme hatası:', error);
             }
         }
         
@@ -829,13 +848,19 @@
             return [newCustomers, returningCustomers, loyalCustomers];
         }
         
+        // Bitiş zamanını hesapla
         function calculateEndTime(date, startTime, duration) {
-            const [hours, minutes] = startTime.split(':');
-            const start = new Date(date);
-            start.setHours(parseInt(hours), parseInt(minutes));
-            
-            const end = new Date(start.getTime() + duration * 60000);
-            return end.toISOString();
+            try {
+                const [hours, minutes] = startTime.split(':');
+                const start = new Date(date);
+                start.setHours(parseInt(hours), parseInt(minutes));
+                
+                const end = new Date(start.getTime() + duration * 60000);
+                return end.toISOString().slice(0, 16); // Sadece tarih ve saat kısmını al
+            } catch (error) {
+                console.error('Bitiş zamanı hesaplama hatası:', error);
+                return null;
+            }
         }
         
         function getServiceDuration(serviceId) {
@@ -886,15 +911,27 @@
             displayCustomers(filteredCustomers);
         }
         
+        // Müşterileri görüntüle
         function displayCustomers(customersToShow = customers) {
             const customersList = document.getElementById('customersList');
+            if (!customersList) return;
+
             customersList.innerHTML = '';
+            
+            if (!Array.isArray(customersToShow)) {
+                customersToShow = Object.values(customersToShow || {});
+            }
+            
+            if (customersToShow.length === 0) {
+                customersList.innerHTML = '<p class="text-gray-500 text-center">Müşteri bulunmuyor.</p>';
+                return;
+            }
             
             customersToShow.forEach(customer => {
                 const card = document.createElement('div');
                 card.className = 'customer-card bg-white p-4 rounded-lg shadow-md relative';
                 
-                const loyaltyLevel = getLoyaltyLevel(customer.loyaltyPoints);
+                const loyaltyLevel = getLoyaltyLevel(customer.loyaltyPoints || 0);
                 
                 card.innerHTML = `
                     <div class="loyalty-badge" style="background: ${loyaltyLevel.color}">
@@ -904,8 +941,8 @@
                     <p class="text-gray-600">${customer.phone}</p>
                     <p class="text-gray-600">${customer.email || '-'}</p>
                     <div class="mt-2">
-                        <span class="text-sm text-gray-500">Toplam Randevu: ${customer.appointmentCount}</span>
-                        <span class="text-sm text-gray-500 ml-2">Puan: ${customer.loyaltyPoints}</span>
+                        <span class="text-sm text-gray-500">Toplam Randevu: ${customer.appointmentCount || 0}</span>
+                        <span class="text-sm text-gray-500 ml-2">Puan: ${customer.loyaltyPoints || 0}</span>
                     </div>
                     <div class="mt-4 flex space-x-2">
                         <button onclick="viewCustomerHistory('${customer.phone}')" class="text-royal-blue hover:text-blue-800">
