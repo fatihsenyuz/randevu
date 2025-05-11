@@ -554,16 +554,36 @@ function showAddAppointmentModal() {
             document.getElementById('newCustomerBtn').onclick = () => {
                 Swal.fire({
                     title: 'Yeni Müşteri',
-                    html: `<input id='newCustomerName' class='swal2-input' placeholder='Müşteri Adı'>`,
+                    html: `
+                        <input id='newCustomerName' class='swal2-input' placeholder='Müşteri Adı'>
+                        <div style='position:relative;width:100%;'>
+                            <span style='position:absolute;left:18px;top:50%;transform:translateY(-50%);color:#888;font-size:1.05em;'>+90</span>
+                            <input id='newCustomerPhone' class='swal2-input' placeholder='Telefon Numarası' style='padding-left:48px;width:100%;' maxlength='10' pattern='[0-9]*' inputmode='numeric'>
+                        </div>
+                    `,
                     showCancelButton: true,
                     confirmButtonText: 'Ekle',
                     cancelButtonText: 'İptal',
+                    didOpen: () => {
+                        setTimeout(() => {
+                            document.querySelectorAll('.swal2-input, .swal2-select, .swal2-textarea').forEach(el => {
+                                if (el.id !== 'newCustomerName' && el.id !== 'newCustomerPhone') el.remove();
+                            });
+                            // Sadece rakam girilmesini sağla
+                            const phoneInput = document.getElementById('newCustomerPhone');
+                            phoneInput.addEventListener('input', function() {
+                                this.value = this.value.replace(/[^0-9]/g, '').slice(0,10);
+                            });
+                        }, 50);
+                    },
                     preConfirm: async () => {
                         const name = document.getElementById('newCustomerName').value;
+                        const phone = document.getElementById('newCustomerPhone').value;
                         if (!name) { Swal.showValidationMessage('İsim girin'); return false; }
-                        const ref = await database.ref('customers').push({ name });
+                        if (!phone || phone.length !== 10) { Swal.showValidationMessage('Geçerli bir telefon numarası girin'); return false; }
+                        const ref = await database.ref('customers').push({ name, phone: '+90' + phone });
                         if (!window.customers) window.customers = [];
-                        window.customers.push({ id: ref.key, name });
+                        window.customers.push({ id: ref.key, name, phone: '+90' + phone });
                         showAddAppointmentModal();
                     }
                 });
