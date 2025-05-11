@@ -2,52 +2,152 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Royal Premium Care Randevu Takip Sistemi</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Royal Premium Care">
+    <meta name="description" content="Royal Premium Care Randevu Takip Sistemi">
+    
+    <!-- PWA Icons -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="icons/favicon.png">
+    
+    <!-- Styles -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    
     <style>
+        /* Mobil Optimizasyonları */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            
+            header {
+                border-radius: 0;
+                margin-bottom: 0;
+            }
+            
+            nav {
+                border-radius: 0;
+                margin-bottom: 0;
+                padding: 0.5rem;
+            }
+            
+            nav button {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
+            
+            .grid-cols-1 {
+                gap: 0.5rem;
+            }
+            
+            .p-6 {
+                padding: 1rem;
+            }
+            
+            .text-2xl {
+                font-size: 1.25rem;
+            }
+            
+            .text-xl {
+                font-size: 1.125rem;
+            }
+        }
+        
+        /* Tam Ekran Modu */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: white;
+        }
+        
+        /* Mobil Menü */
+        .mobile-menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 0.5rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .mobile-menu button {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            color: #666;
+        }
+        
+        .mobile-menu button.active {
+            color: #1e3a8a;
+        }
+        
+        /* Diğer Stiller */
         .modal {
             transition: opacity 0.25s ease;
         }
+        
         body, html {
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
+        
         .bg-royal-blue {
             background-color: #1e3a8a;
         }
+        
         .text-royal-blue {
             color: #1e3a8a;
         }
+        
         .border-royal-blue {
             border-color: #1e3a8a;
         }
+        
         .dark-mode {
             background-color: #1a1a1a;
             color: #ffffff;
         }
+        
         .dark-mode .bg-white {
             background-color: #2d2d2d;
             color: #ffffff;
         }
+        
         .dark-mode .text-gray-700 {
             color: #e0e0e0;
         }
+        
         .dark-mode .border {
             border-color: #404040;
         }
-        .calendar-container {
-            height: 600px;
-        }
+        
         .customer-card {
             transition: transform 0.2s;
         }
+        
         .customer-card:hover {
             transform: translateY(-5px);
         }
+        
         .loyalty-badge {
             position: absolute;
             top: -10px;
@@ -60,6 +160,16 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
+        }
+        
+        /* Mobil Form Elemanları */
+        input, select, textarea {
+            font-size: 16px !important; /* iOS zoom sorununu önler */
+        }
+        
+        /* Mobil Butonlar */
+        button {
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -1513,6 +1623,59 @@
                     break;
             }
         }
+
+        // Mobil Menü
+        const mobileMenu = document.querySelector('.mobile-menu');
+        if (mobileMenu) {
+            mobileMenu.addEventListener('click', () => {
+                const activeSection = mobileMenu.querySelector('.active').getAttribute('onclick').match(/\('([^']+)'/)[1];
+                showSection(activeSection);
+            });
+        }
+
+        // PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker başarıyla kaydedildi:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker kaydı başarısız:', error);
+                    });
+            });
+        }
+
+        // Tam Ekran Modu
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Tam ekran hatası: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Mobil Menü Aktif Tab Güncelleme
+        function updateMobileMenu(activeSection) {
+            const buttons = document.querySelectorAll('.mobile-menu button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.onclick.toString().includes(activeSection)) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        // Section gösterme fonksiyonunu güncelle
+        const originalShowSection = showSection;
+        showSection = function(sectionName) {
+            originalShowSection(sectionName);
+            updateMobileMenu(sectionName);
+        };
     </script>
 </body>
 </html>
