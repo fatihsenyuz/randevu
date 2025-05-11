@@ -734,11 +734,11 @@
 
                 // Listeyi temizle
                 appointmentList.innerHTML = '';
-
+            
                 // Randevuları filtrele ve sırala
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-
+            
                 const upcomingAppointments = appointments
                     .filter(appointment => {
                         const appointmentDate = new Date(appointment.date);
@@ -750,7 +750,7 @@
                         const dateB = new Date(`${b.date}T${b.time}`);
                         return dateA - dateB;
                     });
-
+            
                 if (upcomingAppointments.length === 0) {
                     appointmentList.innerHTML = '<p class="text-gray-500 text-center">Yaklaşan randevu bulunmuyor.</p>';
                     return;
@@ -1613,14 +1613,20 @@
                         };
 
                         console.log('Oluşturulan randevu:', appointment);
-
+            
                         // Firebase'e kaydet
                         const appointmentRef = await database.ref('appointments').push(appointment);
                         console.log('Randevu kaydedildi:', appointmentRef.key);
 
+                        // Yerel appointments dizisine ekle
+                        appointments.push({
+                            id: appointmentRef.key,
+                            ...appointment
+                        });
+
                         // Müşteriyi kaydet/güncelle
                         await updateCustomer(appointment);
-
+                        
                         // Formu temizle
                         appointmentForm.reset();
                         document.getElementById('appointmentDate').value = new Date().toISOString().split('T')[0];
