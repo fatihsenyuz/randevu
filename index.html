@@ -598,6 +598,9 @@ function displayAppointmentsByDay() {
     const container = document.getElementById('appointmentDaysList');
     if (!container) return;
     container.innerHTML = '';
+    // Teşhis için konsola yaz
+    console.log('services:', services.map(s => ({id: s.id, name: s.name})));
+    console.log('appointments:', appointments.map(a => ({serviceId: a.serviceId, customerName: a.customerName})));
     // Filtrele ve ayı uygula
     const filtered = appointments.filter(app => {
         const appDate = new Date(app.date);
@@ -632,13 +635,17 @@ function displayAppointmentsByDay() {
         `;
         // Randevu kartları
         dayApps.forEach(app => {
+            const now = new Date();
+            const appDateTime = new Date(app.date + 'T' + app.time);
+            const isPast = now >= appDateTime;
+            const barColor = isPast ? 'bg-gray-300' : 'bg-pink-300';
             const card = document.createElement('div');
             card.className = 'appointment-card-row mb-4';
             card.innerHTML = `
-                <div class="left-bar w-1.5 h-12 rounded bg-pink-300 mr-3"></div>
+                <div class="left-bar w-1.5 h-12 rounded ${barColor} mr-3"></div>
                 <div class="flex-1">
                     <div class="font-semibold text-gray-700 truncate">${app.customerName}</div>
-                    <div class="text-gray-500 text-base truncate">${getServiceName(app.serviceId)}</div>
+                    <div class="text-gray-500 text-base truncate">${getServiceName(app.serviceId) || 'Hizmet bulunamadı'}</div>
                 </div>
                 <div class="right-menu flex flex-col items-end ml-2">
                     <span class="text-gray-600 text-base">${app.time}</span>
@@ -658,7 +665,7 @@ function displayAppointmentsByDay() {
     container.appendChild(nextBtnDiv);
 }
 function getServiceName(id) {
-    const s = services.find(x => x.id === id);
+    const s = services.find(x => x.id == id);
     return s ? s.name : '';
 }
 // + Butonu: Randevu ekleme
