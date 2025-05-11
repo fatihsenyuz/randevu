@@ -395,6 +395,46 @@
             overflow-x: hidden;
         }
     </style>
+    <style>
+    /* --- YATAY TAŞMAYI ENGELLE --- */
+    html, body, .container, #mainContent, #appointmentDaysList {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .flex, .grid, .flex-row, .flex-col, .flex-wrap {
+        min-width: 0 !important;
+    }
+    .appointment-card-row, .appointment-card-row .flex-1 {
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+    .appointment-card-row .flex-1 > div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    @media (max-width: 768px) {
+        .w-\[48\%\] {
+            width: 100% !important;
+        }
+        .px-6 {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        .w-14, .h-14 {
+            width: 3.2rem !important;
+            height: 3.2rem !important;
+        }
+        .appointment-card-row {
+            flex-wrap: wrap !important;
+        }
+    }
+    </style>
 </head>
 <body class="bg-white">
     <div class="container mx-auto px-4 py-4">
@@ -564,8 +604,8 @@ function displayAppointmentsByDay() {
             card.innerHTML = `
                 <div class="left-bar w-1.5 h-12 rounded bg-pink-300 mr-3"></div>
                 <div class="flex-1">
-                    <div class="font-semibold text-gray-700">${app.customerName}</div>
-                    <div class="text-gray-500 text-base">${getServiceName(app.serviceId)}</div>
+                    <div class="font-semibold text-gray-700 truncate">${app.customerName}</div>
+                    <div class="text-gray-500 text-base truncate">${getServiceName(app.serviceId)}</div>
                 </div>
                 <div class="right-menu flex flex-col items-end ml-2">
                     <span class="text-gray-600 text-base">${app.time}</span>
