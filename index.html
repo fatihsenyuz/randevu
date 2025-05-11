@@ -217,6 +217,69 @@
                 display: flex; /* Masaüstünde üst menüyü göster */
             }
         }
+
+        /* SweetAlert2 ve modal için özel modern stil */
+        .swal2-popup {
+            border-radius: 24px !important;
+            padding: 2.2rem 1.2rem 1.5rem 1.2rem !important;
+            max-width: 95vw;
+            width: 380px;
+        }
+        .swal2-title {
+            font-size: 2rem !important;
+            font-weight: 700 !important;
+            color: #222 !important;
+            margin-bottom: 1.2rem !important;
+        }
+        .swal2-input, .swal2-select, .swal2-textarea {
+            border-radius: 22px !important;
+            border: 1.5px solid #e5e7eb !important;
+            background: #f5f6f7 !important;
+            font-size: 1.08rem !important;
+            padding: 0.9em 1.1em !important;
+            margin-bottom: 1.1em !important;
+            box-shadow: none !important;
+        }
+        .swal2-input:focus, .swal2-select:focus, .swal2-textarea:focus {
+            border-color: #38b6ff !important;
+            background: #fff !important;
+        }
+        .swal2-textarea {
+            min-height: 70px !important;
+            max-height: 120px !important;
+        }
+        .swal2-actions {
+            margin-top: 1.5em !important;
+            flex-direction: column !important;
+        }
+        .swal2-actions button.swal2-cancel {
+            background: #6b7280 !important;
+            color: #fff !important;
+            border-radius: 12px !important;
+            font-size: 1.05em !important;
+            width: 100%;
+            margin-bottom: 0.7em;
+            padding: 0.9em 0 !important;
+        }
+        .swal2-actions button.custom-create-btn {
+            background: #38b6ff !important;
+            color: #fff !important;
+            border-radius: 14px !important;
+            font-size: 1.15em !important;
+            font-weight: 700 !important;
+            width: 100%;
+            padding: 1em 0 !important;
+            margin: 0;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        @media (max-width: 480px) {
+            .swal2-popup {
+                width: 98vw !important;
+                min-width: unset !important;
+                padding: 1.2rem 0.3rem 1.2rem 0.3rem !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-white">
@@ -471,15 +534,7 @@ function showAddAppointmentModal() {
             const footer = Swal.getActions();
             const createBtn = document.createElement('button');
             createBtn.textContent = 'Randevuyu Oluştur';
-            createBtn.style.background = '#38b6ff';
-            createBtn.style.color = 'white';
-            createBtn.style.fontWeight = '600';
-            createBtn.style.fontSize = '1.1em';
-            createBtn.style.width = '100%';
-            createBtn.style.border = 'none';
-            createBtn.style.borderRadius = '8px';
-            createBtn.style.padding = '12px 0';
-            createBtn.style.marginTop = '10px';
+            createBtn.className = 'custom-create-btn';
             createBtn.onclick = async () => {
                 const customerId = document.getElementById('swalCustomer').value;
                 const customerName = window.customers ? (window.customers.find(c => c.id === customerId)?.name || '') : '';
