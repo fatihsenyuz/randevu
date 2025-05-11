@@ -118,10 +118,6 @@
                             <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerPhone" type="tel" required>
                         </div>
                         <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="customerEmail">E-posta</label>
-                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerEmail" type="email">
-                        </div>
-                        <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="customerAddress">Adres</label>
                             <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerAddress" rows="3" required></textarea>
                         </div>
@@ -1036,12 +1032,15 @@
         // Servis seçeneklerini doldur
         function populateServiceOptions() {
             console.log('Servis seçenekleri dolduruluyor');
+            const serviceSelect = document.getElementById('serviceSelect');
+            if (!serviceSelect) return;
+
             serviceSelect.innerHTML = '<option value="">Hizmet Seçiniz</option>';
             
             if (Array.isArray(services)) {
                 services.forEach(service => {
                     const option = document.createElement('option');
-                    option.value = service.id || service.key; // Firebase'den gelen ID'yi kullan
+                    option.value = service.id;
                     option.textContent = `${service.name} (${service.duration} dk)`;
                     serviceSelect.appendChild(option);
                 });
@@ -1051,6 +1050,9 @@
         // Saat seçeneklerini doldur
         function populateTimeOptions() {
             console.log('Saat seçenekleri dolduruluyor');
+            const appointmentTimeSelect = document.getElementById('appointmentTime');
+            if (!appointmentTimeSelect) return;
+
             appointmentTimeSelect.innerHTML = '<option value="">Saat Seçiniz</option>';
             
             const startHour = 8; // 08:00
@@ -1304,6 +1306,110 @@
                     text: 'Yedekleme sırasında bir hata oluştu.'
                 });
             }
+        });
+
+        // Event listener'ları ayarla
+        function setupEventListeners() {
+            console.log('Event listener\'lar ayarlanıyor');
+            
+            // Tab değiştirme
+            appointmentsTab.addEventListener('click', () => showSection('appointments'));
+            customersTab.addEventListener('click', () => showSection('customers'));
+            servicesTab.addEventListener('click', () => showSection('services'));
+            reportsTab.addEventListener('click', () => showSection('reports'));
+            settingsTab.addEventListener('click', () => showSection('settings'));
+            
+            // Karanlık mod toggle
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+            
+            // Kullanıcı menüsü
+            document.getElementById('userMenuBtn').addEventListener('click', toggleUserMenu);
+            
+            // Form submit
+            appointmentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('Form gönderildi');
+                
+                try {
+                    // Form verilerini al
+                    const formData = {
+                        customerName: document.getElementById('customerName').value,
+                        customerPhone: document.getElementById('customerPhone').value,
+                        customerAddress: document.getElementById('customerAddress').value,
+                        date: document.getElementById('appointmentDate').value,
+                        time: document.getElementById('appointmentTime').value,
+                        serviceId: document.getElementById('serviceSelect').value,
+                        repeat: document.getElementById('repeatAppointment').value,
+                        notes: document.getElementById('appointmentNotes').value
+                    };
+
+                    console.log('Form verileri:', formData);
+
+                    // Validasyon
+                    if (!formData.customerName || !formData.customerPhone || !formData.date || !formData.time || !formData.serviceId) {
+                        throw new Error('Lütfen tüm zorunlu alanları doldurun.');
+                    }
+
+                    // Seçilen hizmeti bul
+                    const selectedService = services.find(s => s.id === formData.serviceId);
+                    console.log('Seçilen hizmet:', selectedService);
+
+                    if (!selectedService) {
+                        throw new Error('Lütfen geçerli bir hizmet seçin.');
+                    }
+
+                    // Randevu nesnesini oluştur
+                    const appointment = {
+                        ...formData,
+                        serviceName: selectedService.name,
+                        serviceDuration: selectedService.duration,
+                        status: 'pending',
+                        createdAt: new Date().toISOString()
+                    };
+
+                    console.log('Oluşturulan randevu:', appointment);
+
+                    // Firebase'e kaydet
+                    const appointmentRef = await database.ref('appointments').push(appointment);
+                    console.log('Randevu kaydedildi:', appointmentRef.key);
+
+                    // Müşteriyi kaydet/güncelle
+                    await updateCustomer(appointment);
+
+                    // Formu temizle
+                    appointmentForm.reset();
+                    appointmentDateInput.value = new Date().toISOString().split('T')[0];
+
+                    // Başarı mesajı göster
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Başarılı!',
+                        text: 'Randevu başarıyla oluşturuldu.'
+                    });
+
+                    // Randevu listesini güncelle
+                    displayAppointments();
+
+                } catch (error) {
+                    console.error('Randevu oluşturma hatası:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: error.message || 'Randevu oluşturulurken bir hata oluştu.'
+                    });
+                }
+            });
+            
+            // Müşteri arama
+            document.getElementById('customerSearch').addEventListener('input', handleCustomerSearch);
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Sayfa yüklendi');
+            initializeApp();
+            setupEventListeners();
+            loadFromFirebase();
         });
     </script>
 </body>
