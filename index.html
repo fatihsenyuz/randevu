@@ -3,918 +3,574 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Randevu Sistemi - Admin Paneli</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/tr.js"></script>
+    <title>Royal Premium Care Randevu Takip Sistemi</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        :root {
-            --primary: #3498db;
-            --primary-dark: #2980b9;
-            --secondary: #2ecc71;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --gray-light: #f5f7fa;
-            --gray: #e0e0e0;
-            --text: #333;
-            --text-light: #666;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --radius: 8px;
+        .modal {
+            transition: opacity 0.25s ease;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body, html {
+            height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        body {
-            background-color: #f9f9f9;
-            color: var(--text);
-            line-height: 1.6;
+        .bg-royal-blue {
+            background-color: #1e3a8a;
         }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
+        .text-royal-blue {
+            color: #1e3a8a;
         }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px 0;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .sidebar-header {
-            padding: 0 20px 20px;
-            border-bottom: 1px solid #34495e;
-        }
-
-        .sidebar-header .logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar-menu {
-            margin-top: 20px;
-        }
-
-        .menu-section {
-            margin-bottom: 10px;
-            padding: 0 20px;
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #7f8c8d;
-            font-weight: bold;
-        }
-
-        .menu-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ecf0f1;
-            text-decoration: none;
-            transition: background-color 0.3s;
-            cursor: pointer;
-        }
-
-        .menu-item:hover, .menu-item.active {
-            background-color: #34495e;
-        }
-
-        .menu-icon {
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 20px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--gray);
-        }
-
-        .page-title {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .card {
-            background-color: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 8px 16px;
-            border-radius: var(--radius);
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-success {
-            background-color: var(--secondary);
-            color: white;
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        .btn-warning {
-            background-color: var(--warning);
-            color: white;
-        }
-
-        /* Tables */
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--gray);
-        }
-
-        th {
-            background-color: var(--gray-light);
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background-color: var(--gray-light);
-        }
-
-        .status {
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .status-confirmed {
-            background-color: #dff7e8;
-            color: var(--secondary);
-        }
-
-        .status-pending {
-            background-color: #fff3e0;
-            color: var(--warning);
-        }
-
-        .status-cancelled {
-            background-color: #feebee;
-            color: var(--danger);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-
-        .action-btn {
-            padding: 5px 8px;
-            border-radius: 4px;
-            background-color: var(--gray-light);
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .action-btn:hover {
-            background-color: var(--gray);
-        }
-
-        /* Forms */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--gray);
-            border-radius: var(--radius);
-            font-size: 16px;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .form-col {
-            flex: 1;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            display: none;
-        }
-
-        .modal {
-            background-color: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            width: 500px;
-            max-width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--gray);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-footer {
-            padding: 15px 20px;
-            border-top: 1px solid var(--gray);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        /* Dashboard Widgets */
-        .dashboard-widgets {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .widget {
-            background-color: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .widget-title {
-            font-size: 14px;
-            color: var(--text-light);
-            margin-bottom: 5px;
-        }
-
-        .widget-value {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .widget-footer {
-            margin-top: auto;
-            font-size: 12px;
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .widget-trend-up {
-            color: var(--secondary);
-        }
-
-        .widget-trend-down {
-            color: var(--danger);
-        }
-
-        /* Calendar */
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .calendar-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .calendar-controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            grid-gap: 10px;
-        }
-
-        .calendar-day-header {
-            text-align: center;
-            font-weight: 600;
-            padding: 10px;
-            background-color: var(--gray-light);
-            border-radius: var(--radius);
-        }
-
-        .calendar-day {
-            border: 1px solid var(--gray);
-            border-radius: var(--radius);
-            height: 120px;
-            overflow-y: auto;
-            padding: 5px;
-            position: relative;
-        }
-
-        .calendar-day-number {
-            font-weight: 600;
-            margin-bottom: 5px;
-            text-align: right;
-            padding: 2px 5px;
-        }
-
-        .today {
-            background-color: var(--primary);
-            color: white;
-            border-radius: 4px;
-        }
-
-        .calendar-event {
-            padding: 5px;
-            border-radius: 4px;
-            margin-bottom: 5px;
-            font-size: 12px;
-            background-color: #e3f2fd;
-            border-left: 3px solid var(--primary);
-            cursor: pointer;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--gray);
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tab:hover {
-            color: var(--primary);
-        }
-
-        .tab.active {
-            border-bottom-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Search & Filters */
-        .search-box {
-            display: flex;
-            margin-bottom: 20px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid var(--gray);
-            border-radius: var(--radius) 0 0 var(--radius);
-            font-size: 16px;
-        }
-
-        .search-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0 15px;
-            border-radius: 0 var(--radius) var(--radius) 0;
-            cursor: pointer;
-        }
-
-        .filters {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .filter-item {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        /* Responsive */
-        @media (max-width: 992px) {
-            .sidebar {
-                width: 70px;
-                overflow: hidden;
-            }
-
-            .sidebar-header .logo span, 
-            .menu-item span {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 70px;
-            }
-
-            .menu-section {
-                text-align: center;
-                padding: 0 5px;
-            }
-
-            .menu-item {
-                justify-content: center;
-                padding: 15px 10px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-widgets {
-                grid-template-columns: 1fr;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .calendar-grid {
-                grid-template-columns: repeat(1, 1fr);
-            }
-
-            .calendar-day-header {
-                display: none;
-            }
-
-            .calendar-day {
-                height: auto;
-                min-height: 80px;
-            }
-        }
-
-        /* Toggle switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--secondary);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
+        .border-royal-blue {
+            border-color: #1e3a8a;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <a href="#" class="logo" onclick="showDashboard()">
-                    <i class="menu-icon">📊</i>
-                    <span>Randevu Admin</span>
-                </a>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="bg-royal-blue text-white p-4 rounded-lg shadow-lg mb-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">Royal Premium Care</h1>
+                <h2 class="text-xl">Randevu Takip Sistemi</h2>
             </div>
-            <div class="sidebar-menu">
-                <div class="menu-section">ANA MENÜ</div>
-                <div class="menu-item active" onclick="showDashboard()">
-                    <i class="menu-icon">📊</i>
-                    <span>Dashboard</span>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Appointment Form -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4 text-royal-blue">Yeni Randevu Oluştur</h2>
+                <form id="appointmentForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="customerName">İsim Soyisim</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerName" type="text" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="customerPhone">Telefon Numarası</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerPhone" type="tel" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="customerAddress">Adres</label>
+                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customerAddress" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appointmentDate">Tarih</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="appointmentDate" type="date" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appointmentTime">Saat</label>
+                        <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="appointmentTime" required>
+                            <option value="">Saat Seçiniz</option>
+                            <!-- Saat seçenekleri JavaScript ile doldurulacak -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="serviceSelect">Hizmet</label>
+                        <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="serviceSelect" required>
+                            <option value="">Hizmet Seçiniz</option>
+                            <!-- Hizmet seçenekleri JavaScript ile doldurulacak -->
+                        </select>
+                    </div>
+                    <button class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">
+                        Randevu Oluştur
+                    </button>
+                </form>
+            </div>
+
+            <!-- Middle Column: Active Appointments -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-royal-blue">Aktif Randevular</h2>
+                    <div>
+                        <button id="customersBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-1 px-3 rounded text-sm">
+                            Müşteriler
+                        </button>
+                    </div>
                 </div>
-                <div class="menu-item" onclick="showAppointments()">
-                    <i class="menu-icon">📅</i>
-                    <span>Randevular</span>
-                </div>
-                <div class="menu-item" onclick="showCustomers()">
-                    <i class="menu-icon">👥</i>
-                    <span>Müşteriler</span>
-                </div>
-                <div class="menu-item" onclick="showServices()">
-                    <i class="menu-icon">🛠️</i>
-                    <span>Hizmetler</span>
-                </div>
-                <div class="menu-item" onclick="showCalendar()">
-                    <i class="menu-icon">📆</i>
-                    <span>Takvim</span>
-                </div>
-                
-                <div class="menu-section">AYARLAR</div>
-                <div class="menu-item" onclick="showSettings()">
-                    <i class="menu-icon">⚙️</i>
-                    <span>Genel Ayarlar</span>
-                </div>
-                <div class="menu-item">
-                    <i class="menu-icon">👤</i>
-                    <span>Profilim</span>
-                </div>
-                <div class="menu-item">
-                    <i class="menu-icon">🚪</i>
-                    <span>Çıkış Yap</span>
+                <div id="appointmentList" class="space-y-4">
+                    <!-- Randevular burada listelenecek -->
                 </div>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Dashboard -->
-            <div id="dashboard" class="page">
-                <div class="page-header">
-                    <div class="page-title">Dashboard</div>
-                    <div class="date">8 Mayıs 2025, Perşembe</div>
-                </div>
+        <!-- Add Service Modal -->
+        <div id="addServiceModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+            <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+            
+            <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+                <div class="modal-content py-4 text-left px-6">
+                    <div class="flex justify-between items-center pb-3">
+                        <p class="text-xl font-bold text-royal-blue">Yeni Hizmet Ekle</p>
+                        <div class="modal-close cursor-pointer z-50">
+                            <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                                <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                            </svg>
+                        </div>
+                    </div>
 
-                <div class="dashboard-widgets">
-                    <div class="widget" style="border-top: 4px solid var(--primary);">
-                        <div class="widget-title">TOPLAM RANDEVU</div>
-                        <div class="widget-value">254</div>
-                        <div class="widget-footer">
-                            <span class="widget-trend-up">↑ 8%</span>
-                            <span>Son 30 güne göre</span>
+                    <form id="serviceForm" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="serviceName">Hizmet Adı</label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="serviceName" type="text" required>
                         </div>
-                    </div>
-                    
-                    <div class="widget" style="border-top: 4px solid var(--secondary);">
-                        <div class="widget-title">BUGÜNKÜ RANDEVULAR</div>
-                        <div class="widget-value">12</div>
-                        <div class="widget-footer">
-                            <span class="widget-trend-up">↑ 2</span>
-                            <span>Dünkü güne göre</span>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="serviceDuration">Süre (dakika)</label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="serviceDuration" type="number" min="15" step="15" required>
                         </div>
-                    </div>
-                    
-                    <div class="widget" style="border-top: 4px solid var(--warning);">
-                        <div class="widget-title">TOPLAM MÜŞTERİ</div>
-                        <div class="widget-value">187</div>
-                        <div class="widget-footer">
-                            <span class="widget-trend-up">↑ 5%</span>
-                            <span>Son 30 güne göre</span>
+                        <div class="flex justify-end pt-2">
+                            <button class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                                Hizmet Ekle
+                            </button>
                         </div>
-                    </div>
-                    
-                    <div class="widget" style="border-top: 4px solid var(--danger);">
-                        <div class="widget-title">İPTAL EDİLEN</div>
-                        <div class="widget-value">8</div>
-                        <div class="widget-footer">
-                            <span class="widget-trend-down">↓ 2%</span>
-                            <span>Son 30 güne göre</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Bugünün Randevuları</div>
-                        <button class="btn btn-primary" onclick="showAppointments()">Tümünü Gör</button>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Müşteri</th>
-                                    <th>Hizmet</th>
-                                    <th>Saat</th>
-                                    <th>Durum</th>
-                                    <th>İşlemler</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Ahmet Yılmaz</td>
-                                    <td>Saç Kesimi</td>
-                                    <td>09:00</td>
-                                    <td><span class="status status-confirmed">Onaylandı</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openEditModal()">✏️</button>
-                                            <button class="action-btn" title="İptal Et">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Ayşe Demir</td>
-                                    <td>Saç Boyama</td>
-                                    <td>10:30</td>
-                                    <td><span class="status status-confirmed">Onaylandı</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openEditModal()">✏️</button>
-                                            <button class="action-btn" title="İptal Et">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Mehmet Kaya</td>
-                                    <td>Saç Bakımı</td>
-                                    <td>12:00</td>
-                                    <td><span class="status status-pending">Bekliyor</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openEditModal()">✏️</button>
-                                            <button class="action-btn" title="İptal Et">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Fatma Öztürk</td>
-                                    <td>Saç Kesimi</td>
-                                    <td>14:30</td>
-                                    <td><span class="status status-pending">Bekliyor</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openEditModal()">✏️</button>
-                                            <button class="action-btn" title="İptal Et">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Son Eklenen Müşteriler</div>
-                        <button class="btn btn-primary" onclick="showCustomers()">Tümünü Gör</button>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Ad Soyad</th>
-                                    <th>E-posta</th>
-                                    <th>Telefon</th>
-                                    <th>Randevu Sayısı</th>
-                                    <th>İşlemler</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Zeynep Şahin</td>
-                                    <td>zeynep@example.com</td>
-                                    <td>0532 123 4567</td>
-                                    <td>3</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openCustomerEditModal()">✏️</button>
-                                            <button class="action-btn" title="Sil">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Ali Yıldız</td>
-                                    <td>ali@example.com</td>
-                                    <td>0533 765 4321</td>
-                                    <td>1</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openCustomerEditModal()">✏️</button>
-                                            <button class="action-btn" title="Sil">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Ayşe Çelik</td>
-                                    <td>ayse@example.com</td>
-                                    <td>0535 987 6543</td>
-                                    <td>0</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openCustomerEditModal()">✏️</button>
-                                            <button class="action-btn" title="Sil">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
-            <!-- Appointments -->
-            <div id="appointments" class="page" style="display: none;">
-                <div class="page-header">
-                    <div class="page-title">Randevular</div>
-                    <button class="btn btn-primary" onclick="openNewAppointmentModal()">Yeni Randevu</button>
-                </div>
+        <!-- Footer -->
+        <footer class="mt-8 text-center">
+            <button id="addServiceBtn" class="bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                <i class="fas fa-plus mr-2"></i>Yeni Hizmet Ekle
+            </button>
+        </footer>
+    </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Randevu Listesi</div>
-                    </div>
-                    <div class="search-box">
-                        <input type="text" class="search-input" placeholder="Müşteri adı, hizmet veya telefon ile ara...">
-                        <button class="search-btn">🔍</button>
-                    </div>
-                    <div class="filters">
-                        <div class="filter-item">
-                            <label for="status-filter">Durum</label>
-                            <select id="status-filter" class="form-control">
-                                <option value="">Tümü</option>
-                                <option value="confirmed">Onaylandı</option>
-                                <option value="pending">Bekliyor</option>
-                                <option value="cancelled">İptal Edildi</option>
-                            </select>
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.17.2/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.17.2/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase yapılandırma
+        const firebaseConfig = {
+          apiKey: "AIzaSyCkDVD0MIZUy4tdLrWJDONYWlt0kXA2xuU",
+          authDomain: "royal-6ff68.firebaseapp.com",
+          databaseURL: "https://royal-6ff68-default-rtdb.firebaseio.com",
+          projectId: "royal-6ff68",
+          storageBucket: "royal-6ff68.appspot.com",
+          messagingSenderId: "1056928171234",
+          appId: "1:1056928171234:web:abcd1234efgh5678ijkl90",
+          measurementId: "G-XYZ123ABC"
+        };
+        
+        // Firebase'i başlat
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Veri yapısı
+        let services = [
+            { id: 1, name: "Koltuk Takımı Yıkama", duration: 120 },
+            { id: 2, name: "Yatak Yıkama", duration: 60 },
+            { id: 3, name: "Sandalye Yıkama", duration: 30 }
+        ];
+        
+        let appointments = [];
+        let customers = [];
+        
+        // DOM elementlerini seçme
+        const appointmentForm = document.getElementById('appointmentForm');
+        const serviceForm = document.getElementById('serviceForm');
+        const addServiceBtn = document.getElementById('addServiceBtn');
+        const addServiceModal = document.getElementById('addServiceModal');
+        const modalClose = document.querySelector('.modal-close');
+        const serviceSelect = document.getElementById('serviceSelect');
+        const appointmentTimeSelect = document.getElementById('appointmentTime');
+        const appointmentList = document.getElementById('appointmentList');
+        const customersBtn = document.getElementById('customersBtn');
+        
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', () => {
+            // Servis seçeneklerini doldur
+            populateServiceOptions();
+            
+            // Saat seçeneklerini doldur
+            populateTimeOptions();
+            
+            // Tarihi bugün olarak ayarla
+            document.getElementById('appointmentDate').valueAsDate = new Date();
+            
+            // Firebase'den verileri yükle
+            loadFromFirebase();
+            
+            // Müşteriler butonuna tıklama dinleyicisi ekle
+            customersBtn.addEventListener('click', showCustomers);
+        });
+        
+        // Servis seçeneklerini doldur
+        function populateServiceOptions() {
+            serviceSelect.innerHTML = '<option value="">Hizmet Seçiniz</option>';
+            services.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = `${service.name} (${service.duration} dk)`;
+                serviceSelect.appendChild(option);
+            });
+        }
+        
+        // Saat seçeneklerini doldur
+        function populateTimeOptions() {
+            appointmentTimeSelect.innerHTML = '<option value="">Saat Seçiniz</option>';
+            for (let hour = 8; hour < 20; hour++) {
+                for (let minute of ['00', '30']) {
+                    const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                    const option = document.createElement('option');
+                    option.value = timeValue;
+                    option.textContent = timeValue;
+                    appointmentTimeSelect.appendChild(option);
+                }
+            }
+        }
+        
+        // Tarih formatlama
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', weekday: 'long' };
+            return date.toLocaleDateString('tr-TR', options);
+        }
+        
+        // Randevuları göster
+        function displayAppointments() {
+            appointmentList.innerHTML = '';
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Tarihe göre sırala
+            const sortedAppointments = [...appointments].sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.time}`);
+                const dateB = new Date(`${b.date}T${b.time}`);
+                return dateA - dateB;
+            });
+            
+            // Bugünden sonraki randevuları filtrele
+            const filteredAppointments = sortedAppointments.filter(appointment => {
+                const appointmentDate = new Date(appointment.date);
+                appointmentDate.setHours(0, 0, 0, 0);
+                return appointmentDate.getTime() >= today.getTime();
+            });
+            
+            if (filteredAppointments.length === 0) {
+                appointmentList.innerHTML = '<p class="text-gray-500 text-center py-4">Aktif randevu bulunmamaktadır.</p>';
+                return;
+            }
+            
+            let currentDate = null;
+            
+            filteredAppointments.forEach(appointment => {
+                const appointmentDate = new Date(appointment.date);
+                appointmentDate.setHours(0, 0, 0, 0);
+                
+                // Tarih başlığını ekle
+                if (!currentDate || currentDate.getTime() !== appointmentDate.getTime()) {
+                    currentDate = appointmentDate;
+                    const dateHeading = document.createElement('div');
+                    dateHeading.className = 'bg-gray-100 p-2 rounded-t-lg font-bold text-royal-blue mt-4';
+                    dateHeading.textContent = formatDate(appointment.date);
+                    appointmentList.appendChild(dateHeading);
+                }
+                
+                // Servis bilgilerini al
+                const service = services.find(s => s.id === parseInt(appointment.serviceId));
+                if (!service) return; // Servis bulunamazsa atla
+                
+                // Randevu bitiş saatini hesapla
+                const [startHour, startMinute] = appointment.time.split(':').map(Number);
+                const startTime = new Date();
+                startTime.setHours(startHour, startMinute, 0, 0);
+                
+                const endTime = new Date(startTime);
+                endTime.setMinutes(endTime.getMinutes() + service.duration);
+                const endTimeStr = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+                
+                // Randevu kartını oluştur
+                const appointmentCard = document.createElement('div');
+                appointmentCard.className = 'border-l-4 border-royal-blue bg-white p-4 shadow-sm mb-2';
+                appointmentCard.innerHTML = `
+                    <div class="flex justify-between">
+                        <div>
+                            <h3 class="font-bold">${appointment.customerName}</h3>
+                            <p class="text-sm text-gray-600">${appointment.customerPhone}</p>
                         </div>
-                        <div class="filter-item">
-                            <label for="service-filter">Hizmet</label>
-                            <select id="service-filter" class="form-control">
-                                <option value="">Tümü</option>
-                                <option value="haircut">Saç Kesimi</option>
-                                <option value="coloring">Saç Boyama</option>
-                                <option value="treatment">Saç Bakımı</option>
-                            </select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="date-filter">Tarih</label>
-                            <input type="date" id="date-filter" class="form-control">
+                        <div class="text-right">
+                            <p class="font-bold">${appointment.time} - ${endTimeStr}</p>
+                            <p class="text-sm text-gray-600">${service.name} (${service.duration} dk)</p>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Müşteri</th>
-                                    <th>Telefon</th>
-                                    <th>Hizmet</th>
-                                    <th>Tarih</th>
-                                    <th>Saat</th>
-                                    <th>Durum</th>
-                                    <th>İşlemler</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Ahmet Yılmaz</td>
-                                    <td>0532 123 4567</td>
-                                    <td>Saç Kesimi</td>
-                                    <td>08.05.2025</td>
-                                    <td>09:00</td>
-                                    <td><span class="status status-confirmed">Onaylandı</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openEditModal()">✏️</button>
-                                            <button class="action-btn" title="İptal Et">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Ayşe Demir</td>
-                                    <td>0533 765 4321</td>
-                                    <td>Saç Boyama</td>
-                                    <td>08.05.2025</td>
-                                    <td>10:30</td>
-                                    <td><span class="status status-confirmed">Onaylandı</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn" title="Düzenle" onclick="openEditModal()">✏️</button>
-                                            <button class="action-btn" title="İptal Et">❌</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Mehmet Kaya</td>
-                                    <td>0535 987 6543</td>
-                                    <td>Saç Bakımı</td>
-                                    <td>08.05.2025</td>
-                                    <td>12:00</td>
-                                    <td><span class="status status-pending">Bekliyor</span></td>
+                    <p class="text-xs text-gray-500 mt-1 truncate">${appointment.customerAddress}</p>
+                    <div class="mt-2 text-right">
+                        <button class="text-red-500 text-xs delete-appointment" data-id="${appointment.id}">
+                            <i class="fas fa-trash-alt"></i> Sil
+                        </button>
+                    </div>
+                `;
+                
+                // Silme butonuna olay dinleyicisi ekle
+                appointmentList.appendChild(appointmentCard);
+            });
+            
+            // Silme butonlarına olay dinleyicisi ekle
+            document.querySelectorAll('.delete-appointment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const appointmentId = this.getAttribute('data-id');
+                    deleteAppointment(appointmentId);
+                });
+            });
+        }
+        
+        // Müşterileri göster
+        function showCustomers() {
+            appointmentList.innerHTML = '';
+            
+            const title = document.createElement('div');
+            title.className = 'bg-gray-100 p-2 rounded-t-lg font-bold text-royal-blue mt-4';
+            title.textContent = 'Tüm Müşteriler';
+            appointmentList.appendChild(title);
+            
+            // Benzersiz müşterileri bul
+            const uniqueCustomers = [];
+            const customerMap = {};
+            
+            appointments.forEach(appointment => {
+                const key = `${appointment.customerName}-${appointment.customerPhone}`;
+                if (!customerMap[key]) {
+                    customerMap[key] = true;
+                    uniqueCustomers.push({
+                        name: appointment.customerName,
+                        phone: appointment.customerPhone,
+                        address: appointment.customerAddress
+                    });
+                }
+            });
+            
+            // Müşterileri alfabetik sırala
+            uniqueCustomers.sort((a, b) => a.name.localeCompare(b.name));
+            
+            if (uniqueCustomers.length === 0) {
+                appointmentList.innerHTML += '<p class="text-gray-500 text-center py-4">Kayıtlı müşteri bulunmamaktadır.</p>';
+                return;
+            }
+            
+            uniqueCustomers.forEach(customer => {
+                const customerCard = document.createElement('div');
+                customerCard.className = 'border-l-4 border-green-500 bg-white p-4 shadow-sm mb-2';
+                customerCard.innerHTML = `
+                    <div>
+                        <h3 class="font-bold">${customer.name}</h3>
+                        <p class="text-sm text-gray-600">${customer.phone}</p>
+                        <p class="text-xs text-gray-500 mt-1">${customer.address}</p>
+                    </div>
+                `;
+                appointmentList.appendChild(customerCard);
+            });
+            
+            // Geri dönüş butonu ekle
+            const backButton = document.createElement('button');
+            backButton.className = 'mt-4 bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded w-full';
+            backButton.textContent = 'Randevulara Dön';
+            backButton.addEventListener('click', () => {
+                displayAppointments();
+            });
+            
+            appointmentList.appendChild(backButton);
+        }
+        
+        // Randevu oluşturma
+        appointmentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const customerName = document.getElementById('customerName').value;
+            const customerPhone = document.getElementById('customerPhone').value;
+            const customerAddress = document.getElementById('customerAddress').value;
+            const appointmentDate = document.getElementById('appointmentDate').value;
+            const appointmentTime = document.getElementById('appointmentTime').value;
+            const serviceId = document.getElementById('serviceSelect').value;
+            
+            // Randevu çakışma kontrolü
+            if (!isTimeSlotAvailable(appointmentDate, appointmentTime, serviceId)) {
+                alert('Bu saat diliminde başka bir randevu bulunmaktadır.');
+                return;
+            }
+            
+            // Yeni randevu ekle
+            const newAppointment = {
+                id: Date.now().toString(),
+                customerName,
+                customerPhone,
+                customerAddress,
+                date: appointmentDate,
+                time: appointmentTime,
+                serviceId
+            };
+            
+            // Firebase'e kaydet
+            saveAppointmentToFirebase(newAppointment)
+                .then(() => {
+                    // Lokale de ekle
+                    appointments.push(newAppointment);
+                    
+                    // Randevuları göster
+                    displayAppointments();
+                    
+                    // Formu temizle
+                    appointmentForm.reset();
+                    document.getElementById('appointmentDate').valueAsDate = new Date();
+                    
+                    alert('Randevu başarıyla oluşturuldu.');
+                })
+                .catch(error => {
+                    console.error("Randevu kaydedilirken hata oluştu:", error);
+                    alert('Randevu oluşturulurken bir hata oluştu.');
+                });
+        });
+        
+        // Randevu silme
+        function deleteAppointment(appointmentId) {
+            if (confirm('Bu randevuyu silmek istediğinizden emin misiniz?')) {
+                // Firebase'den sil
+                database.ref('appointments/' + appointmentId).remove()
+                    .then(() => {
+                        // Lokalden de sil
+                        appointments = appointments.filter(appointment => appointment.id !== appointmentId);
+                        
+                        // Randevuları tekrar göster
+                        displayAppointments();
+                        
+                        alert('Randevu başarıyla silindi.');
+                    })
+                    .catch(error => {
+                        console.error("Randevu silinirken hata oluştu:", error);
+                        alert('Randevu silinirken bir hata oluştu.');
+                    });
+            }
+        }
+        
+        // Randevu çakışma kontrolü
+        function isTimeSlotAvailable(date, time, serviceId) {
+            const selectedService = services.find(s => s.id === parseInt(serviceId));
+            if (!selectedService) return false;
+            
+            const [startHour, startMinute] = time.split(':').map(Number);
+            const startDateTime = new Date(date);
+            startDateTime.setHours(startHour, startMinute, 0, 0);
+            
+            const endDateTime = new Date(startDateTime);
+            endDateTime.setMinutes(endDateTime.getMinutes() + selectedService.duration);
+            
+            return !appointments.some(appointment => {
+                if (appointment.date !== date) return false;
+                
+                const [existingStartHour, existingStartMinute] = appointment.time.split(':').map(Number);
+                const existingStartDateTime = new Date(date);
+                existingStartDateTime.setHours(existingStartHour, existingStartMinute, 0, 0);
+                
+                const existingService = services.find(s => s.id === parseInt(appointment.serviceId));
+                if (!existingService) return false;
+                
+                const existingEndDateTime = new Date(existingStartDateTime);
+                existingEndDateTime.setMinutes(existingEndDateTime.getMinutes() + existingService.duration);
+                
+                // Çakışma kontrolü
+                return (
+                    (startDateTime < existingEndDateTime && endDateTime > existingStartDateTime)
+                );
+            });
+        }
+        
+        // Hizmet ekleme modalını aç
+        addServiceBtn.addEventListener('click', () => {
+            addServiceModal.classList.remove('opacity-0', 'pointer-events-none');
+        });
+        
+        // Hizmet ekleme modalını kapat
+        modalClose.addEventListener('click', () => {
+            addServiceModal.classList.add('opacity-0', 'pointer-events-none');
+        });
+        
+        // Hizmet ekleme
+        serviceForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const serviceName = document.getElementById('serviceName').value;
+            const serviceDuration = parseInt(document.getElementById('serviceDuration').value);
+            
+            // Yeni hizmet ekle
+            const newService = {
+                id: services.length > 0 ? Math.max(...services.map(s => s.id)) + 1 : 1,
+                name: serviceName,
+                duration: serviceDuration
+            };
+            
+            // Firebase'e kaydet
+            saveServiceToFirebase(newService)
+                .then(() => {
+                    // Lokale de ekle
+                    services.push(newService);
+                    
+                    // Hizmet seçeneklerini güncelle
+                    populateServiceOptions();
+                    
+                    // Modalı kapat
+                    addServiceModal.classList.add('opacity-0', 'pointer-events-none');
+                    
+                    // Formu temizle
+                    serviceForm.reset();
+                    
+                    alert('Hizmet başarıyla eklendi.');
+                })
+                .catch(error => {
+                    console.error("Hizmet kaydedilirken hata oluştu:", error);
+                    alert('Hizmet eklenirken bir hata oluştu.');
+                });
+        });
+        
+        // Firebase işlemleri
+        
+        // Firebase'den verileri yükle
+        function loadFromFirebase() {
+            // Hizmetleri yükle
+            database.ref('services').once('value')
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const servicesData = snapshot.val();
+                        services = Object.values(servicesData);
+                        populateServiceOptions();
+                    } else {
+                        // Varsayılan hizmetleri Firebase'e kaydet
+                        services.forEach(service => {
+                            database.ref('services/' + service.id).set(service);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Hizmetler yüklenirken hata:", error);
+                });
+            
+            // Randevuları yükle ve gerçek zamanlı dinle
+            database.ref('appointments').on('value', snapshot => {
+                if (snapshot.exists()) {
+                    const appointmentsData = snapshot.val();
+                    appointments = Object.values(appointmentsData);
+                    displayAppointments();
+                } else {
+                    appointments = [];
+                    displayAppointments();
+                }
+            });
+        }
+        
+        // Randevuyu Firebase'e kaydet
+        function saveAppointmentToFirebase(appointment) {
+            return database.ref('appointments/' + appointment.id).set(appointment);
+        }
+        
+        // Hizmeti Firebase'e kaydet
+        function saveServiceToFirebase(service) {
+            return database.ref('services/' + service.id).set(service);
+        }
+        
+        // Firebase'den uygulamayı ayır (sayfa kapatılırken)
+        window.addEventListener('beforeunload', () => {
+            database.ref('appointments').off();
+        });
+    </script>
+</body>
+</html>
