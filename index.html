@@ -563,6 +563,8 @@ function showAddAppointmentModal() {
             };
             // Randevuyu Oluştur butonu
             const footer = Swal.getActions();
+            // Önceki fazladan butonları temizle
+            while (footer.firstChild) footer.removeChild(footer.firstChild);
             const createBtn = document.createElement('button');
             createBtn.textContent = 'Randevuyu Oluştur';
             createBtn.className = 'custom-create-btn';
