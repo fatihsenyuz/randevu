@@ -817,7 +817,7 @@ function showAppointmentMenu(id) {
     const app = appointments.find(a => a.id === id);
     if (!app) return;
     const customer = (window.customers || []).find(c => c.id === app.customerId) || {};
-    const phone = customer.phone || '';
+    const phone = customer.phone || app.phone || '';
     Swal.fire({
         title: 'Randevu İşlemleri',
         html: `
