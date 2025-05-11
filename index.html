@@ -989,6 +989,271 @@
             // Oturumu kapat
             auth.signOut();
         });
+
+        // Servis seçeneklerini doldur
+        function populateServiceOptions() {
+            serviceSelect.innerHTML = '<option value="">Hizmet Seçiniz</option>';
+            services.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = `${service.name} (${service.duration} dk)`;
+                serviceSelect.appendChild(option);
+            });
+        }
+        
+        // Saat seçeneklerini doldur
+        function populateTimeOptions() {
+            appointmentTimeSelect.innerHTML = '<option value="">Saat Seçiniz</option>';
+            const startHour = parseInt(settings.workingHours.start.split(':')[0]);
+            const endHour = parseInt(settings.workingHours.end.split(':')[0]);
+            
+            for (let hour = startHour; hour < endHour; hour++) {
+                for (let minute of ['00', '30']) {
+                    const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                    const option = document.createElement('option');
+                    option.value = timeValue;
+                    option.textContent = timeValue;
+                    appointmentTimeSelect.appendChild(option);
+                }
+            }
+        }
+
+        // Hizmetleri görüntüle
+        function displayServices() {
+            const servicesList = document.getElementById('servicesList');
+            servicesList.innerHTML = '';
+            
+            services.forEach(service => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg shadow-md';
+                card.innerHTML = `
+                    <h3 class="font-bold text-lg">${service.name}</h3>
+                    <p class="text-gray-600">Süre: ${service.duration} dakika</p>
+                    <div class="mt-4 flex space-x-2">
+                        <button onclick="editService('${service.id}')" class="text-royal-blue hover:text-blue-800">
+                            <i class="fas fa-edit"></i> Düzenle
+                        </button>
+                        <button onclick="deleteService('${service.id}')" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i> Sil
+                        </button>
+                    </div>
+                `;
+                servicesList.appendChild(card);
+            });
+        }
+
+        // Hizmet ekleme modalını göster
+        function showAddServiceModal() {
+            addServiceModal.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        // Hizmet ekleme modalını gizle
+        function hideAddServiceModal() {
+            addServiceModal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        // Hizmet ekleme
+        async function handleServiceSubmit(e) {
+            e.preventDefault();
+            
+            const service = {
+                name: document.getElementById('serviceName').value,
+                duration: parseInt(document.getElementById('serviceDuration').value),
+                id: Date.now().toString() // Basit bir ID oluşturma
+            };
+            
+            try {
+                await database.ref('services').push(service);
+                hideAddServiceModal();
+                serviceForm.reset();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı!',
+                    text: 'Hizmet başarıyla eklendi.'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata!',
+                    text: 'Hizmet eklenirken bir hata oluştu.'
+                });
+            }
+        }
+
+        // Hizmet düzenleme
+        function editService(serviceId) {
+            const service = services.find(s => s.id === serviceId);
+            
+            Swal.fire({
+                title: 'Hizmet Düzenle',
+                html: `
+                    <form id="editServiceForm" class="text-left">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Hizmet Adı</label>
+                            <input type="text" id="editServiceName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${service.name}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Süre (dakika)</label>
+                            <input type="number" id="editServiceDuration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${service.duration}" min="15" step="15">
+                        </div>
+                    </form>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Kaydet',
+                cancelButtonText: 'İptal',
+                preConfirm: () => {
+                    return {
+                        name: document.getElementById('editServiceName').value,
+                        duration: parseInt(document.getElementById('editServiceDuration').value)
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    updateService(serviceId, result.value);
+                }
+            });
+        }
+
+        // Hizmet güncelleme
+        async function updateService(serviceId, newData) {
+            const serviceRef = database.ref('services').orderByChild('id').equalTo(serviceId);
+            const snapshot = await serviceRef.once('value');
+            
+            if (snapshot.exists()) {
+                const serviceKey = Object.keys(snapshot.val())[0];
+                await database.ref(`services/${serviceKey}`).update({
+                    ...newData,
+                    id: serviceId
+                });
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı!',
+                    text: 'Hizmet başarıyla güncellendi.'
+                });
+            }
+        }
+
+        // Hizmet silme
+        async function deleteService(serviceId) {
+            const result = await Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Bu hizmeti silmek istediğinizden emin misiniz?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Sil',
+                cancelButtonText: 'İptal'
+            });
+            
+            if (result.isConfirmed) {
+                const serviceRef = database.ref('services').orderByChild('id').equalTo(serviceId);
+                const snapshot = await serviceRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const serviceKey = Object.keys(snapshot.val())[0];
+                    await database.ref(`services/${serviceKey}`).remove();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Başarılı!',
+                        text: 'Hizmet başarıyla silindi.'
+                    });
+                }
+            }
+        }
+
+        // Ayarları güncelle
+        function updateSettingsUI() {
+            document.getElementById('emailNotifications').checked = settings.notifications.email;
+            document.getElementById('smsNotifications').checked = settings.notifications.sms;
+            document.getElementById('backupFrequency').value = settings.backup.frequency;
+            
+            // Çalışma saatleri ayarlarını güncelle
+            const workingHoursDiv = document.getElementById('workingHours');
+            workingHoursDiv.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Başlangıç Saati</label>
+                        <input type="time" id="workingHoursStart" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${settings.workingHours.start}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Bitiş Saati</label>
+                        <input type="time" id="workingHoursEnd" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${settings.workingHours.end}">
+                    </div>
+                </div>
+                <button id="saveWorkingHours" class="mt-4 bg-royal-blue hover:bg-blue-800 text-white font-bold py-2 px-4 rounded">
+                    Çalışma Saatlerini Kaydet
+                </button>
+            `;
+            
+            // Çalışma saatleri kaydetme butonuna event listener ekle
+            document.getElementById('saveWorkingHours').addEventListener('click', saveWorkingHours);
+        }
+
+        // Çalışma saatlerini kaydet
+        async function saveWorkingHours() {
+            const newSettings = {
+                ...settings,
+                workingHours: {
+                    start: document.getElementById('workingHoursStart').value,
+                    end: document.getElementById('workingHoursEnd').value
+                }
+            };
+            
+            try {
+                await database.ref('settings').set(newSettings);
+                settings = newSettings;
+                populateTimeOptions(); // Saat seçeneklerini güncelle
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı!',
+                    text: 'Çalışma saatleri güncellendi.'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata!',
+                    text: 'Çalışma saatleri güncellenirken bir hata oluştu.'
+                });
+            }
+        }
+
+        // Bildirim ayarlarını güncelle
+        document.getElementById('emailNotifications').addEventListener('change', async function() {
+            settings.notifications.email = this.checked;
+            await database.ref('settings/notifications/email').set(this.checked);
+        });
+
+        document.getElementById('smsNotifications').addEventListener('change', async function() {
+            settings.notifications.sms = this.checked;
+            await database.ref('settings/notifications/sms').set(this.checked);
+        });
+
+        document.getElementById('backupFrequency').addEventListener('change', async function() {
+            settings.backup.frequency = this.value;
+            await database.ref('settings/backup/frequency').set(this.value);
+            setupAutomaticBackup(); // Yedekleme zamanlamasını güncelle
+        });
+
+        // Yedekleme butonu
+        document.getElementById('backupNow').addEventListener('click', async function() {
+            try {
+                await createBackup();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı!',
+                    text: 'Yedekleme başarıyla tamamlandı.'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata!',
+                    text: 'Yedekleme sırasında bir hata oluştu.'
+                });
+            }
+        });
     </script>
 </body>
 </html>
